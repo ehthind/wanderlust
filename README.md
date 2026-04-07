@@ -9,6 +9,8 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - worktree-local app boot and proof-of-work collection
 - Symphony-compatible workflow contracts for the upstream service
 - repo-local hooks that bootstrap and validate isolated Symphony workspaces
+- autonomous delivery that can stop at draft PR, ready PR, or merged-on-main depending on repository policy
+- hybrid observability with local agent-debug surfaces and optional managed exports
 
 ## Core commands
 - `corepack pnpm install`
@@ -17,6 +19,8 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - `corepack pnpm lint`
 - `corepack pnpm typecheck`
 - `corepack pnpm check`
+- `corepack pnpm check:delivery`
+- `corepack pnpm check:observability`
 - `corepack pnpm symphony:setup`
 - `corepack pnpm symphony:run`
 
@@ -34,3 +38,9 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - `packages/shared`: schemas, config, observability, logging, testing, and UI helpers
 - `WORKFLOW.md`: Symphony contract for isolated implementation runs
 - `tools/symphony`: repo-local hooks plus wrappers for the upstream Symphony clone
+- `ops/observability`: local OTEL/Grafana-compatible stack for workspace debugging
+
+## Delivery policy
+- GitHub and Linear are part of the delivery loop for Symphony-run work.
+- The repo expects protected-branch PR flow on `main`, with automation stopping at branch protection rather than bypassing it.
+- Proof-of-work artifacts under `.symphony/` must be rich enough for another agent to inspect without replaying the whole run.

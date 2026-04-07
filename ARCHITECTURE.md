@@ -5,6 +5,7 @@ Wanderlust follows a rigid, agent-legible architecture inspired by the Harness E
 ## Image-derived patterns we are encoding
 - `Worktree-local validation loop`: the app must be bootable per worktree and easy for agents to validate with browser automation.
 - `Local observability loop`: logs, metrics, and traces must be easy to expose and query locally, even if the first scaffold only ships the interfaces and hooks.
+- `Autonomous delivery loop`: implementation, validation, branch creation, PR creation, merge monitoring, and issue-state updates are part of the same control flow.
 - `Knowledge store layout`: root docs stay short; `docs/` and `plans/` hold the durable system of record.
 - `Layered domain model`: every domain uses `types -> config -> repo -> service -> runtime -> ui`, with cross-cutting concerns entering through `providers`.
 
@@ -44,3 +45,18 @@ Cross-cutting integrations are accessed only through provider interfaces:
 ## Control-plane platform
 - upstream `openai/symphony` Elixir implementation as the orchestrator
 - root `WORKFLOW.md` as the shared policy contract
+- `.symphony/*.json` artifacts as the machine-readable run ledger
+
+## Delivery gates
+- `main` is expected to stay behind protected-branch PR flow.
+- Local run hooks should mirror the same validation gates as CI.
+- The repo should be able to stop safely at any of these stages:
+  - validated local branch
+  - draft PR
+  - ready PR with auto-merge enabled
+  - merged issue ready for closure
+
+## Observability split
+- `ops/observability` holds the disposable local stack for agent debugging.
+- `packages/shared/observability` holds the application-facing contracts for logs, traces, metrics, and correlation.
+- Managed sinks such as Sentry and PostHog are optional exports; local runs must still be debuggable without them.

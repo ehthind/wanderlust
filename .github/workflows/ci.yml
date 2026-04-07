@@ -19,4 +19,7 @@ jobs:
       - run: corepack pnpm lint
       - run: corepack pnpm typecheck
       - run: corepack pnpm check
+      - run: corepack pnpm check:observability
       - run: corepack pnpm test
+      - run: npx playwright install --with-deps chromium
+      - run: corepack pnpm playwright:smoke

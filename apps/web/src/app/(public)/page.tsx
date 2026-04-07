@@ -1,11 +1,11 @@
 import Link from "next/link";
 
-import { getDiscoverCardView } from "@wanderlust/domains/destinations";
+import * as destinations from "@wanderlust/domains/destinations";
 
 const navItems = ["Discover", "Trips", "Search", "Inbox"] as const;
 
 export default function HomePage() {
-  const discover = getDiscoverCardView();
+  const discover = destinations.getDiscoverCardView();
 
   return (
     <main

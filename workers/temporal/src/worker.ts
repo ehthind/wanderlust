@@ -2,10 +2,13 @@ import { NativeConnection, Worker } from "@temporalio/worker";
 
 import { getAppEnv } from "@wanderlust/shared-config";
 import { createLogger } from "@wanderlust/shared-logging";
+import { buildMetricEvent, buildObservabilityLabels } from "@wanderlust/shared-observability";
 
 import * as activities from "./activities/fake-booking.js";
 
-const logger = createLogger("temporal-worker");
+const logger = createLogger("temporal-worker", {
+  includeTrace: true,
+});
 
 const run = async () => {
   const env = getAppEnv();
@@ -24,6 +27,8 @@ const run = async () => {
   logger.info("Temporal worker started", {
     taskQueue: "wanderlust",
     address: env.TEMPORAL_ADDRESS,
+    labels: buildObservabilityLabels(),
+    metric: buildMetricEvent("temporal.worker.started", 1, "count"),
   });
 
   await worker.run();

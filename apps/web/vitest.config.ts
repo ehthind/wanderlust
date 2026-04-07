@@ -13,6 +13,14 @@ export default defineConfig({
         import.meta.dirname,
         "../../packages/shared/ui/src/index.ts",
       ),
+      "@wanderlust/shared-logging": path.resolve(
+        import.meta.dirname,
+        "../../packages/shared/logging/src/index.ts",
+      ),
+      "@wanderlust/shared-observability": path.resolve(
+        import.meta.dirname,
+        "../../packages/shared/observability/src/index.ts",
+      ),
       "@wanderlust/shared-schemas": path.resolve(
         import.meta.dirname,
         "../../packages/shared/schemas/src/index.ts",

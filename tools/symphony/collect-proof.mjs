@@ -1,16 +1,50 @@
-import fs from "node:fs";
-import path from "node:path";
+import {
+  artifactPath,
+  currentGitState,
+  getWorkspaceContext,
+  readArtifact,
+  updateRunArtifact,
+  writeArtifact,
+} from "./_shared.mjs";
 
-const repoRoot = process.cwd();
+const ctx = getWorkspaceContext();
+const checks = readArtifact(ctx, "checks.json");
+const observability = readArtifact(ctx, "observability.json");
+const run = updateRunArtifact(ctx, {
+  run: {
+    stage: "after-run",
+    status: checks?.passed ? "validated" : "blocked",
+    completedAt: new Date().toISOString(),
+  },
+});
+
+const git = currentGitState(ctx);
 const summary = {
   generatedAt: new Date().toISOString(),
-  checks: ["corepack pnpm check", "corepack pnpm typecheck", "corepack pnpm test"],
-  docs: ["AGENTS.md", "ARCHITECTURE.md", "PLANS.md", "WORKFLOW.md"],
+  issue: run.issue,
+  workspace: run.workspace,
+  delivery: run.delivery,
+  run: run.run,
+  git,
+  artifacts: {
+    run: artifactPath(ctx, "run.json"),
+    checks: artifactPath(ctx, "checks.json"),
+    observability: artifactPath(ctx, "observability.json"),
+  },
+  summary: {
+    localValidationGate: checks?.passed ? "passed" : "failed",
+    requiredDocs: [
+      "AGENTS.md",
+      "ARCHITECTURE.md",
+      "PLANS.md",
+      "WORKFLOW.md",
+      "docs/runbooks/delivery-loop.md",
+      "docs/runbooks/observability.md",
+    ],
+    requiredChecks: checks?.required ?? [],
+    observabilityMode: observability?.local?.mode ?? "metadata-only",
+  },
 };
 
-const outputDir = path.join(repoRoot, ".symphony");
-const outputPath = path.join(outputDir, "proof.json");
-
-fs.mkdirSync(outputDir, { recursive: true });
-fs.writeFileSync(outputPath, JSON.stringify(summary, null, 2));
-process.stdout.write(`proof written to ${outputPath}\n`);
+writeArtifact(ctx, "proof.json", summary);
+process.stdout.write(`proof written to ${artifactPath(ctx, "proof.json")}\n`);

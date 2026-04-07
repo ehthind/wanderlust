@@ -15,3 +15,4 @@ test-results
 !.symphony/workspaces/.gitkeep
 apps/web/.next
 workers/temporal/dist
+*.tsbuildinfo

@@ -1,7 +1,15 @@
 {
   "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
   "files": {
-    "ignore": [".next", ".turbo", "dist", "coverage", ".symphony/workspaces"]
+    "ignore": [
+      ".next",
+      ".turbo",
+      "dist",
+      "coverage",
+      "playwright-report",
+      "test-results",
+      ".symphony/workspaces"
+    ]
   },
   "formatter": {
     "enabled": true,

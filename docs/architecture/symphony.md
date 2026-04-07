@@ -7,6 +7,7 @@ Symphony is an orchestration layer for isolated implementation runs. It is not p
 - workspace bootstrap hooks for cloned issue workspaces
 - lifecycle hooks under `tools/symphony`
 - proof-of-work collection hooks
+- delivery-loop policy docs
 - operator docs under `ops/symphony`
 - wrapper scripts that run the upstream `openai/symphony` Elixir service against this repo
 
@@ -45,9 +46,23 @@ The current workflow uses upstream Symphony's default workspace model:
 
 Proof artifacts still come from the repo-local `after_run` flow.
 
+## Delivery authority
+The upstream Symphony service is expected to drive the full delivery loop for this repo when the relevant credentials are available:
+- claim and update Linear issues
+- create or update issue branches
+- prepare commits
+- open or update GitHub pull requests
+- enable auto-merge
+- monitor merge completion
+- mark Linear work `Done` after the protected branch merge lands
+
+Repo-local docs and hooks define the policy; upstream Symphony remains the scheduler.
+
 ## Expected operator flow
 1. Run the upstream Symphony service against this repo's `WORKFLOW.md`.
 2. Let it create an empty issue workspace under `workspace.root`.
 3. Use `hooks.after_create` to clone Wanderlust into that workspace.
-4. Use the repo-local hooks to validate and collect proof.
-5. Inspect the workspace-local proof artifacts before deciding whether to clean it up.
+4. Use the repo-local hooks to validate the workspace, prepare observability, and record run metadata.
+5. Let the agent implement, validate, and prepare delivery state.
+6. Use the repo-local hooks to collect proof and observability artifacts.
+7. Inspect the workspace-local proof artifacts before deciding whether to clean it up.

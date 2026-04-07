@@ -20,9 +20,13 @@ This repo is optimized for agent-first development. Treat this file as a map, no
 - Root `WORKFLOW.md` is the scheduler contract.
 - Workspace hooks live under `tools/symphony/`.
 - Proof-of-work artifacts must be reproducible from local commands and CI.
+- Symphony-run agents are allowed to write to GitHub and Linear for this repo's delivery loop when the run policy calls for it.
+- Do not bypass branch protection on `main`; prefer draft PR -> ready PR -> auto-merge.
+- Keep delivery state legible through `.symphony/run.json`, `.symphony/checks.json`, `.symphony/observability.json`, and `.symphony/proof.json`.
 
 ## Before shipping
 - Run `corepack pnpm check`
 - Run `corepack pnpm typecheck`
 - Run `corepack pnpm test`
+- Run `corepack pnpm playwright:smoke` when the web shell or delivery gate changes.
 - Update docs or plans when behavior or constraints change

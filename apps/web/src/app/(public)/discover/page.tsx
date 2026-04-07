@@ -1,7 +1,7 @@
-import { getDiscoverCardView } from "@wanderlust/domains/destinations";
+import * as destinations from "@wanderlust/domains/destinations";
 
 export default function DiscoverPage() {
-  const discover = getDiscoverCardView();
+  const discover = destinations.getDiscoverCardView();
 
   return (
     <main style={{ padding: 40 }}>
