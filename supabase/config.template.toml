@@ -1,0 +1,54 @@
+project_id = "{{SUPABASE_PROJECT_ID}}"
+
+[api]
+enabled = true
+port = {{SUPABASE_API_PORT}}
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = {{SUPABASE_DB_PORT}}
+shadow_port = {{SUPABASE_DB_SHADOW_PORT}}
+health_timeout = "2m"
+major_version = 17
+
+[db.pooler]
+enabled = false
+port = {{SUPABASE_POOLER_PORT}}
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = {{SUPABASE_STUDIO_PORT}}
+api_url = "http://127.0.0.1"
+openai_api_key = "env(OPENAI_API_KEY)"
+
+[inbucket]
+enabled = true
+port = {{SUPABASE_INBUCKET_PORT}}
+
+[storage]
+enabled = true
+
+[storage.s3_protocol]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "{{WANDERLUST_SITE_URL}}"
+additional_redirect_urls = ["{{WANDERLUST_AUTH_REDIRECT_URL}}"]
+

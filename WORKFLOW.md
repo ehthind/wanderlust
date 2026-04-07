@@ -22,6 +22,8 @@ hooks:
     git clone "$SOURCE_REPO_URL" .
     corepack enable
     corepack pnpm install
+    corepack pnpm supabase:prepare
+    node tools/symphony/after-create.mjs
   before_run: |
     node tools/symphony/before-run.mjs
   after_run: |

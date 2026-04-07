@@ -3,18 +3,18 @@ import { spawn, spawnSync } from "node:child_process";
 const DEFAULT_BIN = "doppler";
 const DEFAULT_MODE = "doppler";
 
-const buildArgs = (source = process.env) => {
-  const args = ["secrets", "download", "--no-file", "--format", "json"];
+const withProjectAndConfig = (args, source = process.env) => {
+  const scopedArgs = [...args];
 
   if (source.DOPPLER_PROJECT) {
-    args.push("--project", source.DOPPLER_PROJECT);
+    scopedArgs.push("--project", source.DOPPLER_PROJECT);
   }
 
   if (source.DOPPLER_CONFIG) {
-    args.push("--config", source.DOPPLER_CONFIG);
+    scopedArgs.push("--config", source.DOPPLER_CONFIG);
   }
 
-  return args;
+  return scopedArgs;
 };
 
 export const resolveSecretsMode = (source = process.env) => {
@@ -27,19 +27,24 @@ export const resolveSecretsMode = (source = process.env) => {
 
 export const getDopplerBin = (source = process.env) => source.DOPPLER_BIN ?? DEFAULT_BIN;
 
+const runDopplerSync = (args, source = process.env) =>
+  spawnSync(getDopplerBin(source), args, {
+    encoding: "utf8",
+    env: source,
+  });
+
 export const assertDopplerReadySync = (source = process.env) => {
   if (resolveSecretsMode(source) === "env") {
     return;
   }
 
-  if (!source.DOPPLER_TOKEN) {
-    throw new Error("DOPPLER_TOKEN is required when WANDERLUST_SECRETS_MODE is set to doppler.");
+  if (!source.DOPPLER_TOKEN && (!source.DOPPLER_PROJECT || !source.DOPPLER_CONFIG)) {
+    throw new Error(
+      "Set DOPPLER_TOKEN or provide both DOPPLER_PROJECT and DOPPLER_CONFIG when WANDERLUST_SECRETS_MODE is set to doppler.",
+    );
   }
 
-  const result = spawnSync(getDopplerBin(source), ["--version"], {
-    encoding: "utf8",
-    env: source,
-  });
+  const result = runDopplerSync(["--version"], source);
 
   if (result.status !== 0) {
     throw new Error(
@@ -55,10 +60,10 @@ export const downloadSecretsSync = (source = process.env) => {
     return { ...source };
   }
 
-  const result = spawnSync(getDopplerBin(source), buildArgs(source), {
-    encoding: "utf8",
-    env: source,
-  });
+  const result = runDopplerSync(
+    withProjectAndConfig(["secrets", "download", "--no-file", "--format", "json"], source),
+    source,
+  );
 
   if (result.status !== 0) {
     const stderr = result.stderr?.trim();
@@ -70,6 +75,41 @@ export const downloadSecretsSync = (source = process.env) => {
   }
 
   return JSON.parse(result.stdout);
+};
+
+export const setSecretsSync = (values, source = process.env) => {
+  assertDopplerReadySync(source);
+
+  const entries = Object.entries(values).filter(
+    ([, value]) => value !== undefined && value !== null && String(value).length > 0,
+  );
+
+  if (entries.length === 0) {
+    return [];
+  }
+
+  const args = withProjectAndConfig(
+    [
+      "secrets",
+      "set",
+      "--no-interactive",
+      ...entries.map(([key, value]) => `${key}=${String(value)}`),
+    ],
+    source,
+  );
+  const result = runDopplerSync(args, source);
+
+  if (result.status !== 0) {
+    const stderr = result.stderr?.trim();
+    const project = source.DOPPLER_PROJECT ?? "wanderlust";
+    const config = source.DOPPLER_CONFIG ?? "local_main";
+    throw new Error(
+      stderr ||
+        `Failed to update Doppler secrets. Configure a write-capable token with \`doppler configure set token=... project=${project} config=${config} --scope <repo-or-worktree>\`.`,
+    );
+  }
+
+  return entries.map(([key]) => key);
 };
 
 export const getManagedSinkStatusSync = (source = process.env) => {

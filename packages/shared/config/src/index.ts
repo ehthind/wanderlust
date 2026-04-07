@@ -1,9 +1,124 @@
 import { execFile } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import { z } from "zod";
 
+const repoRoot = fileURLToPath(new URL("../../../../", import.meta.url));
 const execFileAsync = promisify(execFile);
+const loadedEnvRoots = new Set<string>();
+const loadedEnvKeysByRoot = new Map<string, Set<string>>();
+
+const loadEnvFile = (
+  filePath: string,
+  {
+    protectedKeys,
+    allowOverride,
+    loadedKeys,
+    targetEnv,
+  }: {
+    protectedKeys: Set<string>;
+    allowOverride: boolean;
+    loadedKeys: Set<string>;
+    targetEnv: NodeJS.ProcessEnv;
+  },
+) => {
+  if (!fs.existsSync(filePath)) {
+    return;
+  }
+
+  for (const rawLine of fs.readFileSync(filePath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf("=");
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    if (!key || protectedKeys.has(key) || (!allowOverride && targetEnv[key] !== undefined)) {
+      continue;
+    }
+
+    let value = line.slice(separatorIndex + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    targetEnv[key] = value;
+    loadedKeys.add(key);
+  }
+};
+
+const loadRepoEnv = (
+  root = repoRoot,
+  {
+    forceReload = false,
+    targetEnv = process.env,
+    useProcessCache = targetEnv === process.env,
+  }: {
+    forceReload?: boolean;
+    targetEnv?: NodeJS.ProcessEnv;
+    useProcessCache?: boolean;
+  } = {},
+) => {
+  if (!useProcessCache) {
+    const loadedKeys = new Set<string>();
+    const protectedKeys = new Set(Object.keys(targetEnv));
+    loadEnvFile(path.join(root, ".env"), {
+      protectedKeys,
+      allowOverride: false,
+      loadedKeys,
+      targetEnv,
+    });
+    loadEnvFile(path.join(root, ".env.local"), {
+      protectedKeys,
+      allowOverride: true,
+      loadedKeys,
+      targetEnv,
+    });
+    return;
+  }
+
+  if (!forceReload && loadedEnvRoots.has(root)) {
+    return;
+  }
+
+  if (forceReload) {
+    const previousKeys = loadedEnvKeysByRoot.get(root);
+    if (previousKeys) {
+      for (const key of previousKeys) {
+        delete targetEnv[key];
+      }
+    }
+    loadedEnvRoots.delete(root);
+  }
+
+  const loadedKeys = new Set<string>();
+  const protectedKeys = new Set(Object.keys(targetEnv));
+  loadEnvFile(path.join(root, ".env"), {
+    protectedKeys,
+    allowOverride: false,
+    loadedKeys,
+    targetEnv,
+  });
+  loadEnvFile(path.join(root, ".env.local"), {
+    protectedKeys,
+    allowOverride: true,
+    loadedKeys,
+    targetEnv,
+  });
+  loadedEnvRoots.add(root);
+  loadedEnvKeysByRoot.set(root, loadedKeys);
+};
 
 const baseEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -76,9 +191,10 @@ export const getBaseEnv = (source: NodeJS.ProcessEnv = process.env): BaseEnv => 
 };
 
 export const downloadDopplerSecrets: SecretLoader = async ({ source, baseEnv }) => {
-  const token = source.DOPPLER_TOKEN;
-  if (!token) {
-    throw new Error("DOPPLER_TOKEN is required when WANDERLUST_SECRETS_MODE is doppler.");
+  if (!source.DOPPLER_TOKEN && (!baseEnv.DOPPLER_PROJECT || !baseEnv.DOPPLER_CONFIG)) {
+    throw new Error(
+      "Set DOPPLER_TOKEN or provide both DOPPLER_PROJECT and DOPPLER_CONFIG when WANDERLUST_SECRETS_MODE is doppler.",
+    );
   }
 
   const args = ["secrets", "download", "--no-file", "--format", "json"];
@@ -137,10 +253,12 @@ export const loadAppEnv = async ({
   source = process.env,
   forceRefresh = false,
   secretLoader = downloadDopplerSecrets,
+  repoRoot: root = repoRoot,
 }: {
   source?: NodeJS.ProcessEnv;
   forceRefresh?: boolean;
   secretLoader?: SecretLoader;
+  repoRoot?: string;
 } = {}): Promise<AppEnv> => {
   const useCache = source === process.env && !forceRefresh;
 
@@ -149,8 +267,16 @@ export const loadAppEnv = async ({
   }
 
   const pending = (async () => {
-    const baseEnv = getBaseEnv(source);
-    const secrets = await resolveSecrets(source, baseEnv, secretLoader);
+    const resolvedSource = source === process.env ? source : { ...source };
+
+    loadRepoEnv(root, {
+      forceReload: forceRefresh,
+      targetEnv: resolvedSource,
+      useProcessCache: source === process.env,
+    });
+
+    const baseEnv = getBaseEnv(resolvedSource);
+    const secrets = await resolveSecrets(resolvedSource, baseEnv, secretLoader);
 
     return {
       ...baseEnv,

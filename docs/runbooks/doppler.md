@@ -17,6 +17,10 @@
 - runtime code and Symphony hooks both depend on `doppler secrets download --no-file --format json`
 
 ## Local use
-- export `DOPPLER_TOKEN`
+- prefer configuring a write-capable `local_main` service token in scoped Doppler CLI config:
+  - `doppler configure set token=... project=wanderlust config=local_main --scope /path/to/repo-or-worktree`
+- local agent/human flows can still use Doppler CLI login for read/admin access when `DOPPLER_PROJECT` and `DOPPLER_CONFIG` are present
+- runtime writes such as `corepack pnpm supabase:start` and `corepack pnpm supabase:status` require the scoped write-capable token
 - run `corepack pnpm dev` or `corepack pnpm symphony:run`
+- run `corepack pnpm supabase:start` or `corepack pnpm supabase:status` to sync the live local Supabase runtime values into Doppler `local_main`
 - use `WANDERLUST_SECRETS_MODE=env` only for test or emergency local fallback paths
