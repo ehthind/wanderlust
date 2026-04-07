@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@wanderlust/domains/*": ["packages/domains/*/src/index.ts"],
+      "@wanderlust/providers/*": ["packages/providers/src/*"],
+      "@wanderlust/shared-config": ["packages/shared/config/src/index.ts"],
+      "@wanderlust/shared-schemas": ["packages/shared/schemas/src/index.ts"],
+      "@wanderlust/shared-observability": ["packages/shared/observability/src/index.ts"],
+      "@wanderlust/shared-logging": ["packages/shared/logging/src/index.ts"],
+      "@wanderlust/shared-testing": ["packages/shared/testing/src/index.ts"],
+      "@wanderlust/shared-ui": ["packages/shared/ui/src/index.ts"]
+    }
+  }
+}

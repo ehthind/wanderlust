@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
+PROJECT_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+MISE_BIN=/opt/homebrew/bin/mise
+
+cd "$PROJECT_ROOT"
+exec "$MISE_BIN" exec -- mix run --no-halt -e "Symphony.CLI.main(System.argv())" -- "$@"

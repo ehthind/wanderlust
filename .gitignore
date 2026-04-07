@@ -1,0 +1,15 @@
+node_modules
+.next
+.turbo
+dist
+coverage
+playwright-report
+test-results
+.env
+.env.local
+.DS_Store
+.temporal
+.symphony/workspaces/*
+!.symphony/workspaces/.gitkeep
+apps/web/.next
+workers/temporal/dist
