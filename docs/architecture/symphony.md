@@ -58,6 +58,12 @@ The upstream Symphony service is expected to drive the full delivery loop for th
 
 Repo-local docs and hooks define the policy; upstream Symphony remains the scheduler.
 
+## Secrets model
+Symphony itself is not responsible for injecting secrets into the workspace environment. Wanderlust uses Doppler service-token runtime fetches instead:
+- `DOPPLER_TOKEN` is expected in the operator environment
+- repo-local hooks and runtime code use the Doppler CLI directly
+- `.symphony` artifacts record only secret availability, never values
+
 ## Expected operator flow
 1. Run the upstream Symphony service against this repo's `WORKFLOW.md`.
 2. Let it create an empty issue workspace under `workspace.root`.

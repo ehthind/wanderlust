@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getAppEnv } from "@wanderlust/shared-config";
+import { loadAppEnv } from "@wanderlust/shared-config";
 import { createLogger } from "@wanderlust/shared-logging";
 import { buildObservabilityLabels, getManagedSinkStatus } from "@wanderlust/shared-observability";
 
@@ -8,10 +8,10 @@ const logger = createLogger("web.health", {
   includeTrace: true,
 });
 
-export function GET() {
-  const env = getAppEnv();
-  const labels = buildObservabilityLabels();
-  const managed = getManagedSinkStatus();
+export async function GET() {
+  const env = await loadAppEnv();
+  const labels = buildObservabilityLabels(env);
+  const managed = getManagedSinkStatus(env);
 
   logger.info("Health check requested", {
     labels,
@@ -22,6 +22,7 @@ export function GET() {
     app: env.APP_NAME,
     service: env.SERVICE_NAME,
     temporalAddress: env.TEMPORAL_ADDRESS,
+    secrets: env.WANDERLUST_SECRETS_MODE,
     labels,
     managed,
   });

@@ -3,6 +3,8 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
+import { getManagedSinkStatusSync } from "../doppler/secrets.mjs";
+
 const issueIdentifierFromWorkspace = (workspaceRoot) => path.basename(workspaceRoot);
 
 const safeGit = (args, cwd) => {
@@ -74,15 +76,7 @@ export const getWorkspaceContext = (cwd = process.cwd()) => {
         otlpHttp: 4318 + workspaceHash,
       },
     },
-    managed: {
-      sentry: {
-        enabled: Boolean(process.env.SENTRY_DSN),
-      },
-      posthog: {
-        enabled: Boolean(process.env.POSTHOG_KEY && process.env.POSTHOG_HOST),
-        host: process.env.POSTHOG_HOST ?? "",
-      },
-    },
+    managed: getManagedSinkStatusSync(process.env),
   };
 };
 

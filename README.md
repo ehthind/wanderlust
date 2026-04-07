@@ -13,6 +13,7 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - hybrid observability with local agent-debug surfaces and optional managed exports
 
 ## Core commands
+- export `DOPPLER_TOKEN` before runtime or Symphony commands that need managed secrets
 - `corepack pnpm install`
 - `corepack pnpm dev`
 - `corepack pnpm test`
@@ -44,3 +45,4 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - GitHub and Linear are part of the delivery loop for Symphony-run work.
 - The repo expects protected-branch PR flow on `main`, with automation stopping at branch protection rather than bypassing it.
 - Proof-of-work artifacts under `.symphony/` must be rich enough for another agent to inspect without replaying the whole run.
+- Managed secrets come from Doppler via a service-token runtime fetch model, not `doppler run` environment injection.

@@ -17,6 +17,7 @@ const requiredFiles = [
   "docs/product/index.md",
   "docs/runbooks/worktree-dev.md",
   "docs/runbooks/symphony.md",
+  "docs/runbooks/doppler.md",
 ];
 
 const plansIndex = fs.readFileSync(path.join(repoRoot, "PLANS.md"), "utf8");

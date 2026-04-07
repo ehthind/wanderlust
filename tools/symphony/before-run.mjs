@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import { assertDopplerReadySync } from "../doppler/secrets.mjs";
 import {
   ensureSymphonyDir,
   getWorkspaceContext,
@@ -19,6 +20,8 @@ const required = [
 ];
 
 const ctx = getWorkspaceContext();
+
+assertDopplerReadySync(process.env);
 
 for (const file of required) {
   if (!fs.existsSync(path.join(process.cwd(), file))) {

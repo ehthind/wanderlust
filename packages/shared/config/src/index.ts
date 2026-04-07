@@ -1,29 +1,166 @@
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
 import { z } from "zod";
 
-const envSchema = z.object({
+const execFileAsync = promisify(execFile);
+
+const baseEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_NAME: z.string().default("Wanderlust"),
   SERVICE_NAME: z.string().default("wanderlust"),
   WEB_PORT: z.coerce.number().int().positive().default(3000),
-  TEMPORAL_ADDRESS: z.string().default("localhost:7233"),
-  TEMPORAL_NAMESPACE: z.string().default("default"),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
-  SENTRY_DSN: z.string().optional(),
-  POSTHOG_HOST: z.string().url().optional(),
-  POSTHOG_KEY: z.string().optional(),
   WORKSPACE_NAME: z.string().default("local"),
   SYMPHONY_ISSUE_IDENTIFIER: z.string().default("local"),
   SYMPHONY_RUN_ID: z.string().default("manual"),
-  SUPABASE_URL: z
-    .string()
-    .url()
-    .or(z.string().startsWith("http://127.0.0.1"))
-    .default("http://127.0.0.1:54321"),
-  SUPABASE_ANON_KEY: z.string().default("local-anon-key"),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().default("local-service-role-key"),
+  WANDERLUST_SECRETS_MODE: z.enum(["doppler", "env"]).optional(),
+  DOPPLER_BIN: z.string().default("doppler"),
+  DOPPLER_PROJECT: z.string().optional(),
+  DOPPLER_CONFIG: z.string().optional(),
+  DOPPLER_TOKEN: z.string().optional(),
 });
 
-export type AppEnv = z.infer<typeof envSchema>;
+const secretSchema = z.object({
+  TEMPORAL_ADDRESS: z.string().min(1),
+  TEMPORAL_NAMESPACE: z.string().min(1),
+  SUPABASE_URL: z.string().url().or(z.string().startsWith("http://127.0.0.1")),
+  SUPABASE_ANON_KEY: z.string().min(1),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  OPENAI_API_KEY: z.string().optional(),
+  INTERCOM_ACCESS_TOKEN: z.string().optional(),
+  SENDGRID_API_KEY: z.string().optional(),
+  SENTRY_DSN: z.string().optional(),
+  POSTHOG_HOST: z.string().url().optional(),
+  POSTHOG_KEY: z.string().optional(),
+  LINEAR_API_KEY: z.string().optional(),
+  GITHUB_TOKEN: z.string().optional(),
+});
 
-export const getAppEnv = (source: NodeJS.ProcessEnv = process.env): AppEnv =>
-  envSchema.parse(source);
+export type BaseEnv = Omit<z.infer<typeof baseEnvSchema>, "DOPPLER_TOKEN"> & {
+  WANDERLUST_SECRETS_MODE: "doppler" | "env";
+};
+export type AppSecrets = z.infer<typeof secretSchema>;
+export type AppEnv = BaseEnv & AppSecrets;
+
+export type SecretLoader = (options: {
+  source: NodeJS.ProcessEnv;
+  baseEnv: BaseEnv;
+}) => Promise<Record<string, unknown>>;
+
+const getSecretsMode = (source: NodeJS.ProcessEnv): "doppler" | "env" => {
+  if (source.WANDERLUST_SECRETS_MODE === "doppler" || source.WANDERLUST_SECRETS_MODE === "env") {
+    return source.WANDERLUST_SECRETS_MODE;
+  }
+
+  return source.NODE_ENV === "test" ? "env" : "doppler";
+};
+
+export const getBaseEnv = (source: NodeJS.ProcessEnv = process.env): BaseEnv => {
+  const parsed = baseEnvSchema.parse(source);
+
+  return {
+    NODE_ENV: parsed.NODE_ENV,
+    APP_NAME: parsed.APP_NAME,
+    SERVICE_NAME: parsed.SERVICE_NAME,
+    WEB_PORT: parsed.WEB_PORT,
+    OTEL_EXPORTER_OTLP_ENDPOINT: parsed.OTEL_EXPORTER_OTLP_ENDPOINT,
+    WORKSPACE_NAME: parsed.WORKSPACE_NAME,
+    SYMPHONY_ISSUE_IDENTIFIER: parsed.SYMPHONY_ISSUE_IDENTIFIER,
+    SYMPHONY_RUN_ID: parsed.SYMPHONY_RUN_ID,
+    DOPPLER_BIN: parsed.DOPPLER_BIN,
+    DOPPLER_PROJECT: parsed.DOPPLER_PROJECT,
+    DOPPLER_CONFIG: parsed.DOPPLER_CONFIG,
+    WANDERLUST_SECRETS_MODE: getSecretsMode(source),
+  };
+};
+
+export const downloadDopplerSecrets: SecretLoader = async ({ source, baseEnv }) => {
+  const token = source.DOPPLER_TOKEN;
+  if (!token) {
+    throw new Error("DOPPLER_TOKEN is required when WANDERLUST_SECRETS_MODE is doppler.");
+  }
+
+  const args = ["secrets", "download", "--no-file", "--format", "json"];
+
+  if (baseEnv.DOPPLER_PROJECT) {
+    args.push("--project", baseEnv.DOPPLER_PROJECT);
+  }
+
+  if (baseEnv.DOPPLER_CONFIG) {
+    args.push("--config", baseEnv.DOPPLER_CONFIG);
+  }
+
+  let result: { stdout: string; stderr: string };
+
+  try {
+    result = await execFileAsync(baseEnv.DOPPLER_BIN, args, {
+      env: source,
+      maxBuffer: 1024 * 1024 * 5,
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error && "stderr" in error && typeof error.stderr === "string"
+        ? error.stderr.trim() || error.message
+        : error instanceof Error
+          ? error.message
+          : "Failed to download secrets from Doppler.";
+    throw new Error(message);
+  }
+
+  if (!result.stdout.trim()) {
+    throw new Error("Doppler returned an empty secrets payload.");
+  }
+
+  return JSON.parse(result.stdout) as Record<string, unknown>;
+};
+
+const resolveSecrets = async (
+  source: NodeJS.ProcessEnv,
+  baseEnv: BaseEnv,
+  secretLoader: SecretLoader,
+): Promise<AppSecrets> => {
+  if (baseEnv.WANDERLUST_SECRETS_MODE === "env") {
+    return secretSchema.parse(source);
+  }
+
+  return secretSchema.parse(await secretLoader({ source, baseEnv }));
+};
+
+let cachedAppEnvPromise: Promise<AppEnv> | null = null;
+
+export const resetAppEnvCache = () => {
+  cachedAppEnvPromise = null;
+};
+
+export const loadAppEnv = async ({
+  source = process.env,
+  forceRefresh = false,
+  secretLoader = downloadDopplerSecrets,
+}: {
+  source?: NodeJS.ProcessEnv;
+  forceRefresh?: boolean;
+  secretLoader?: SecretLoader;
+} = {}): Promise<AppEnv> => {
+  const useCache = source === process.env && !forceRefresh;
+
+  if (useCache && cachedAppEnvPromise) {
+    return cachedAppEnvPromise;
+  }
+
+  const pending = (async () => {
+    const baseEnv = getBaseEnv(source);
+    const secrets = await resolveSecrets(source, baseEnv, secretLoader);
+
+    return {
+      ...baseEnv,
+      ...secrets,
+    };
+  })();
+
+  if (useCache) {
+    cachedAppEnvPromise = pending;
+  }
+
+  return pending;
+};

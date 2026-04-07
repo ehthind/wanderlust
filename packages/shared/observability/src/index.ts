@@ -28,12 +28,32 @@ export type AppLogEvent = {
   metadata?: Record<string, unknown>;
 };
 
-type ContextSource = Record<string, string | undefined>;
+const secretKeyPattern = /(token|secret|key|dsn|authorization|cookie)/i;
+
+const redactValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(redactValue);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nested]) => [
+        key,
+        secretKeyPattern.test(key) ? "[REDACTED]" : redactValue(nested),
+      ]),
+    );
+  }
+
+  return value;
+};
+
+type ContextSource = Record<string, string | number | undefined>;
 
 export const formatLogEvent = (event: AppLogEvent): string =>
   JSON.stringify({
     ts: new Date().toISOString(),
     ...event,
+    ...(event.metadata ? { metadata: redactValue(event.metadata) } : {}),
   });
 
 export const buildTraceContext = (
@@ -42,10 +62,10 @@ export const buildTraceContext = (
 ): TraceContext => ({
   traceId: crypto.randomUUID(),
   spanId: crypto.randomUUID().slice(0, 16),
-  service: source.SERVICE_NAME ?? "wanderlust",
-  workspace: source.WORKSPACE_NAME ?? "local",
-  issue: source.SYMPHONY_ISSUE_IDENTIFIER ?? "local",
-  runId: source.SYMPHONY_RUN_ID ?? `${scope}-manual`,
+  service: String(source.SERVICE_NAME ?? "wanderlust"),
+  workspace: String(source.WORKSPACE_NAME ?? "local"),
+  issue: String(source.SYMPHONY_ISSUE_IDENTIFIER ?? "local"),
+  runId: String(source.SYMPHONY_RUN_ID ?? `${scope}-manual`),
 });
 
 export const buildMetricEvent = (
@@ -57,9 +77,9 @@ export const buildMetricEvent = (
   name,
   value,
   unit,
-  service: source.SERVICE_NAME ?? "wanderlust",
-  workspace: source.WORKSPACE_NAME ?? "local",
-  issue: source.SYMPHONY_ISSUE_IDENTIFIER ?? "local",
+  service: String(source.SERVICE_NAME ?? "wanderlust"),
+  workspace: String(source.WORKSPACE_NAME ?? "local"),
+  issue: String(source.SYMPHONY_ISSUE_IDENTIFIER ?? "local"),
 });
 
 export const getManagedSinkStatus = (source: ContextSource = process.env) => ({
@@ -73,8 +93,8 @@ export const getManagedSinkStatus = (source: ContextSource = process.env) => ({
 });
 
 export const buildObservabilityLabels = (source: ContextSource = process.env) => ({
-  service: source.SERVICE_NAME ?? "wanderlust",
-  workspace: source.WORKSPACE_NAME ?? "local",
-  issue: source.SYMPHONY_ISSUE_IDENTIFIER ?? "local",
-  runId: source.SYMPHONY_RUN_ID ?? "manual",
+  service: String(source.SERVICE_NAME ?? "wanderlust"),
+  workspace: String(source.WORKSPACE_NAME ?? "local"),
+  issue: String(source.SYMPHONY_ISSUE_IDENTIFIER ?? "local"),
+  runId: String(source.SYMPHONY_RUN_ID ?? "manual"),
 });

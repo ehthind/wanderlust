@@ -7,9 +7,9 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "dev": "corepack pnpm -r --parallel --stream --filter @wanderlust/web --filter @wanderlust/temporal-worker dev",
-    "dev:web": "corepack pnpm --filter @wanderlust/web dev",
-    "dev:worker": "corepack pnpm --filter @wanderlust/temporal-worker dev",
+    "dev": "node tools/dev/guard-secrets.mjs -- corepack pnpm -r --parallel --stream --filter @wanderlust/web --filter @wanderlust/temporal-worker dev",
+    "dev:web": "node tools/dev/guard-secrets.mjs -- corepack pnpm --filter @wanderlust/web dev",
+    "dev:worker": "node tools/dev/guard-secrets.mjs -- corepack pnpm --filter @wanderlust/temporal-worker dev",
     "build": "corepack pnpm -r --filter @wanderlust/web --filter @wanderlust/temporal-worker build",
     "test": "corepack pnpm -r --filter @wanderlust/web --filter @wanderlust/temporal-worker test",
     "lint": "biome check .",
@@ -23,7 +23,7 @@
     "check:files": "node tools/checks/files.mjs",
     "check:observability": "node tools/checks/observability.mjs",
     "symphony:setup": "bash tools/symphony/setup-upstream.sh",
-    "symphony:run": "bash tools/symphony/run-upstream.sh",
+    "symphony:run": "node tools/dev/guard-secrets.mjs -- bash tools/symphony/run-upstream.sh",
     "turbo:dev": "corepack pnpm exec turbo run dev --parallel",
     "turbo:typecheck": "corepack pnpm exec turbo run typecheck",
     "playwright:smoke": "playwright test --grep @smoke"

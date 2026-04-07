@@ -1,6 +1,9 @@
 import { spawn } from "node:child_process";
 
+import { assertDopplerReadySync } from "../doppler/secrets.mjs";
 import { derivePort } from "./port-utils.mjs";
+
+assertDopplerReadySync(process.env);
 
 const port = process.env.WEB_PORT ?? String(derivePort({ base: 3000, spread: 400 }));
 

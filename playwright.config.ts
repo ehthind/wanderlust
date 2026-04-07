@@ -9,7 +9,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "WEB_PORT=3000 corepack pnpm --dir apps/web dev",
+    command: "WANDERLUST_SECRETS_MODE=env WEB_PORT=3000 corepack pnpm --dir apps/web dev",
     port: Number(process.env.WEB_PORT ?? 3000),
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
