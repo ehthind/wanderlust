@@ -14,7 +14,7 @@ Wanderlust follows a rigid, agent-legible architecture inspired by the Harness E
 - `packages/domains`: business-domain implementation
 - `packages/providers`: stable interfaces for external rails
 - `packages/shared`: contracts, config, observability, logging, testing, and UI utilities
-- `ops/symphony/elixir`: Elixir operator that can supervise isolated implementation runs against this repo
+- `tools/symphony`: repo-local hook and wrapper layer used by the upstream Symphony operator
 
 ## Domain layering
 - `types`: contracts and pure domain values
@@ -42,5 +42,5 @@ Cross-cutting integrations are accessed only through provider interfaces:
 - `OpenAI` for model execution
 
 ## Control-plane platform
-- `Elixir/OTP` for the colocated Symphony operator
+- upstream `openai/symphony` Elixir implementation as the orchestrator
 - root `WORKFLOW.md` as the shared policy contract

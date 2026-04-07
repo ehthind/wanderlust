@@ -12,18 +12,26 @@ tracker:
     - Cancelled
     - Canceled
     - Duplicate
+polling:
+  interval_ms: 30000
 workspace:
-  root: .symphony/workspaces
+  root: ~/code/wanderlust-workspaces
 hooks:
-  after_create: node tools/symphony/after-create.mjs
-  before_run: node tools/symphony/before-run.mjs
-  after_run: node tools/symphony/after-run.mjs
-  before_remove: node tools/symphony/before-remove.mjs
+  after_create: |
+    SOURCE_REPO_URL="${WANDERLUST_SOURCE_REPO_URL:-https://github.com/ehthind/wanderlust.git}"
+    git clone "$SOURCE_REPO_URL" .
+    corepack enable
+    corepack pnpm install
+  before_run: |
+    node tools/symphony/before-run.mjs
+  after_run: |
+    node tools/symphony/after-run.mjs
+  before_remove: |
+    node tools/symphony/before-remove.mjs
   timeout_ms: 60000
 agent:
   max_concurrent_agents: 1
   max_turns: 8
-  allow_subagents: false
 codex:
   command: codex app-server
   model: gpt-5.1-codex-mini
@@ -34,14 +42,28 @@ codex:
 
 # Wanderlust implementation run
 
-You are working in the Wanderlust monorepo.
+You are working on a Wanderlust Linear issue inside an isolated workspace clone of the repository.
 
-## Expected workflow
+Issue context:
+Identifier: {{ issue.identifier }}
+Title: {{ issue.title }}
+Current status: {{ issue.state }}
+Labels: {{ issue.labels }}
+URL: {{ issue.url }}
+
+Description:
+{% if issue.description %}
+{{ issue.description }}
+{% else %}
+No description provided.
+{% endif %}
+
+## Required workflow
 1. Read `AGENTS.md`, `ARCHITECTURE.md`, and `PLANS.md`.
 2. Read the relevant plan under `plans/active/`.
 3. Use the repo-local docs as the source of truth before making assumptions.
-4. Keep all changes inside the assigned workspace.
-5. Prove the work with local checks and concise evidence.
+4. Work only inside this workspace clone.
+5. Prove the work with local checks and concise evidence in the workspace artifacts.
 
 ## Required outcomes
 - preserve domain layering and provider boundaries

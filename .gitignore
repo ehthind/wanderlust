@@ -9,6 +9,8 @@ test-results
 .env.local
 .DS_Store
 .temporal
+.symphony/*.json
+.symphony/*.log
 .symphony/workspaces/*
 !.symphony/workspaces/.gitkeep
 apps/web/.next

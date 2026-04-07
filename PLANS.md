@@ -6,7 +6,9 @@ Plans are first-class artifacts in this repository.
 - [0001 Repo scaffold](plans/active/0001-repo-scaffold.md)
 
 ## Completed
-- none yet
+- [0002 Symphony execution loop](plans/completed/0002-symphony-execution-loop.md)
+- [0003 Tracker write-back](plans/completed/0003-tracker-write-back.md)
+- [0004 Upstream Symphony pivot](plans/completed/0004-upstream-symphony-pivot.md)
 
 ## Debt
 - [Technical debt tracker](plans/debt/README.md)

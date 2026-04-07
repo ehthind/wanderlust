@@ -4,7 +4,7 @@
 Create the initial Wanderlust monorepo scaffold with:
 - harness-friendly root docs
 - Symphony-compatible workflow contracts
-- colocated Elixir operator skeleton for Symphony
+- upstream Symphony integration hooks and wrappers
 - web and worker boot shells
 - provider and domain contracts
 - mechanical repo checks
@@ -13,11 +13,11 @@ Create the initial Wanderlust monorepo scaffold with:
 - Next.js app + Temporal worker
 - Supabase for app state
 - LangGraph for agent runtime
-- Symphony compatibility is first-class, but the external scheduler is optional
+- Symphony compatibility is first-class, and the upstream scheduler is the preferred implementation
 
 ## Progress
 - [x] repo skeleton created
-- [x] colocated Elixir Symphony control-plane scaffolded
+- [x] upstream Symphony wrapper and workflow contract added
 - [ ] app and worker shells boot locally
-- [ ] checks and smoke tests pass
+- [x] checks and smoke tests pass
 - [ ] CI runs the baseline suite

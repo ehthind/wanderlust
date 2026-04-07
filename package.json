@@ -20,6 +20,8 @@
     "check:docs": "node tools/checks/docs.mjs",
     "check:plans": "node tools/checks/plans.mjs",
     "check:files": "node tools/checks/files.mjs",
+    "symphony:setup": "bash tools/symphony/setup-upstream.sh",
+    "symphony:run": "bash tools/symphony/run-upstream.sh",
     "turbo:dev": "corepack pnpm exec turbo run dev --parallel",
     "turbo:typecheck": "corepack pnpm exec turbo run typecheck",
     "playwright:smoke": "playwright test --grep @smoke"

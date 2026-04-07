@@ -1,17 +1,17 @@
 # Symphony Operator Notes
 
-This directory is for the operator-side setup that attaches Symphony to the Wanderlust repo.
+This directory is for the repo-local setup that attaches the upstream Symphony service to Wanderlust.
 
 ## Current state
-- repo-native hooks and workflow contract are present
+- repo-local hooks and workflow contract are present
 - proof collection is scriptable
-- the Elixir operator skeleton now lives in `ops/symphony/elixir`
+- the canonical Symphony runtime lives in the separate upstream clone at `/Users/amritthind/code/symphony/elixir`
 
-## Attach later
-When you are ready to run Symphony against this repo:
-1. provide Linear credentials
-2. install Elixir/Erlang via `mise`
-3. point the orchestrator at the repository root
-4. run `./bin/symphony ../../../WORKFLOW.md` from `ops/symphony/elixir`
-5. let it use `WORKFLOW.md`
-6. confirm the workspace root and hooks are writable/executable
+## Run now
+1. set `LINEAR_API_KEY`
+2. optionally set `WANDERLUST_SOURCE_REPO_URL` if you do not want workspaces cloned from `https://github.com/ehthind/wanderlust.git`
+3. run `corepack pnpm symphony:setup`
+4. run `corepack pnpm symphony:run`
+
+## Historical note
+Wanderlust previously carried a colocated experimental Symphony operator. That subtree has been removed in favor of the upstream `openai/symphony` implementation.
