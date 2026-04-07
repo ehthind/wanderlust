@@ -1,6 +1,6 @@
+import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
@@ -63,11 +63,31 @@ const loadRepoEnv = (
   {
     forceReload = false,
     targetEnv = process.env,
+    useProcessCache = targetEnv === process.env,
   }: {
     forceReload?: boolean;
     targetEnv?: NodeJS.ProcessEnv;
+    useProcessCache?: boolean;
   } = {},
 ) => {
+  if (!useProcessCache) {
+    const loadedKeys = new Set<string>();
+    const protectedKeys = new Set(Object.keys(targetEnv));
+    loadEnvFile(path.join(root, ".env"), {
+      protectedKeys,
+      allowOverride: false,
+      loadedKeys,
+      targetEnv,
+    });
+    loadEnvFile(path.join(root, ".env.local"), {
+      protectedKeys,
+      allowOverride: true,
+      loadedKeys,
+      targetEnv,
+    });
+    return;
+  }
+
   if (!forceReload && loadedEnvRoots.has(root)) {
     return;
   }
@@ -171,9 +191,10 @@ export const getBaseEnv = (source: NodeJS.ProcessEnv = process.env): BaseEnv => 
 };
 
 export const downloadDopplerSecrets: SecretLoader = async ({ source, baseEnv }) => {
-  const token = source.DOPPLER_TOKEN;
-  if (!token) {
-    throw new Error("DOPPLER_TOKEN is required when WANDERLUST_SECRETS_MODE is doppler.");
+  if (!source.DOPPLER_TOKEN && (!baseEnv.DOPPLER_PROJECT || !baseEnv.DOPPLER_CONFIG)) {
+    throw new Error(
+      "Set DOPPLER_TOKEN or provide both DOPPLER_PROJECT and DOPPLER_CONFIG when WANDERLUST_SECRETS_MODE is doppler.",
+    );
   }
 
   const args = ["secrets", "download", "--no-file", "--format", "json"];
@@ -246,12 +267,16 @@ export const loadAppEnv = async ({
   }
 
   const pending = (async () => {
-    if (source === process.env) {
-      loadRepoEnv(root, { forceReload: forceRefresh, targetEnv: source });
-    }
+    const resolvedSource = source === process.env ? source : { ...source };
 
-    const baseEnv = getBaseEnv(source);
-    const secrets = await resolveSecrets(source, baseEnv, secretLoader);
+    loadRepoEnv(root, {
+      forceReload: forceRefresh,
+      targetEnv: resolvedSource,
+      useProcessCache: source === process.env,
+    });
+
+    const baseEnv = getBaseEnv(resolvedSource);
+    const secrets = await resolveSecrets(resolvedSource, baseEnv, secretLoader);
 
     return {
       ...baseEnv,

@@ -1,6 +1,17 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { loadAppEnv, resetAppEnvCache } from "@wanderlust/shared-config";
+
+const createdDirs: string[] = [];
+
+const createTempRepo = () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "wanderlust-temporal-config-"));
+  createdDirs.push(tempDir);
+  return tempDir;
+};
 
 const restoreEnv = (snapshot: NodeJS.ProcessEnv) => {
   for (const key of Object.keys(process.env)) {
@@ -18,6 +29,13 @@ describe("loadAppEnv", () => {
   afterEach(() => {
     restoreEnv(originalEnv);
     resetAppEnvCache();
+
+    while (createdDirs.length > 0) {
+      const tempDir = createdDirs.pop();
+      if (tempDir) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+    }
   });
 
   it("loads secrets directly from env in env mode", async () => {
@@ -70,7 +88,9 @@ describe("loadAppEnv", () => {
     expect(calls).toBe(1);
   });
 
-  it("fails fast when Doppler mode is active without a token", async () => {
+  it("fails fast when Doppler mode is active without a token or scoped config", async () => {
+    const tempDir = createTempRepo();
+
     await expect(
       loadAppEnv({
         forceRefresh: true,
@@ -78,7 +98,8 @@ describe("loadAppEnv", () => {
           NODE_ENV: "development",
           WANDERLUST_SECRETS_MODE: "doppler",
         },
+        repoRoot: tempDir,
       }),
-    ).rejects.toThrow(/DOPPLER_TOKEN/);
+    ).rejects.toThrow(/DOPPLER_TOKEN|DOPPLER_PROJECT/);
   });
 });

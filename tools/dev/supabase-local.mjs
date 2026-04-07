@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
+import { setSecretsSync } from "../doppler/secrets.mjs";
 import { derivePort, derivePortBlock } from "./port-utils.mjs";
 
 const require = createRequire(import.meta.url);
@@ -47,6 +48,8 @@ export const deriveSupabaseLocalSettings = ({ cwd = repoRoot, existingEnv = proc
   return {
     projectId,
     webPort,
+    dopplerProject: existingEnv.DOPPLER_PROJECT ?? "wanderlust",
+    dopplerConfig: existingEnv.DOPPLER_CONFIG ?? "local_main",
     apiPort,
     dbPort,
     shadowPort,
@@ -81,6 +84,8 @@ export const renderSupabaseTemplate = (template, settings) =>
 export const formatManagedEnvBlock = (settings) => {
   const lines = [
     managedStart,
+    `DOPPLER_PROJECT=${settings.dopplerProject}`,
+    `DOPPLER_CONFIG=${settings.dopplerConfig}`,
     `WEB_PORT=${settings.webPort}`,
     `WANDERLUST_SITE_URL=${settings.siteUrl}`,
     `WANDERLUST_AUTH_REDIRECT_URL=${settings.authRedirectUrl}`,
@@ -91,17 +96,7 @@ export const formatManagedEnvBlock = (settings) => {
     `SUPABASE_POOLER_PORT=${settings.poolerPort}`,
     `SUPABASE_STUDIO_PORT=${settings.studioPort}`,
     `SUPABASE_INBUCKET_PORT=${settings.inbucketPort}`,
-    `SUPABASE_URL=${settings.supabaseUrl}`,
-    `SUPABASE_DB_URL=${settings.supabaseDbUrl}`,
-    `SUPABASE_STUDIO_URL=${settings.supabaseStudioUrl}`,
-    `SUPABASE_INBUCKET_URL=${settings.supabaseInbucketUrl}`,
-    `SUPABASE_ANON_KEY=${settings.supabaseAnonKey}`,
-    `SUPABASE_SERVICE_ROLE_KEY=${settings.supabaseServiceRoleKey}`,
   ];
-
-  if (settings.supabaseJwtSecret) {
-    lines.push(`SUPABASE_JWT_SECRET=${settings.supabaseJwtSecret}`);
-  }
 
   lines.push(managedEnd);
 
@@ -150,12 +145,32 @@ const resolveSupabaseBinary = () => {
   const packageJsonPath = require.resolve("supabase/package.json", { paths: [repoRoot] });
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   const binRelative = packageJson.bin?.supabase;
+  const packageRoot = path.dirname(packageJsonPath);
   const binPath = path.join(path.dirname(packageJsonPath), binRelative ?? "");
+  const postinstallPath = path.join(packageRoot, "scripts/postinstall.js");
 
-  if (!binRelative || !fs.existsSync(binPath)) {
+  if (!binRelative) {
     throw new Error(
       "Supabase CLI binary is missing. Run `corepack pnpm install` to restore the pinned local toolchain.",
     );
+  }
+
+  if (!fs.existsSync(binPath)) {
+    const installResult = spawnSync(process.execPath, [postinstallPath], {
+      cwd: packageRoot,
+      encoding: "utf8",
+      env: process.env,
+    });
+
+    if (installResult.status !== 0 || !fs.existsSync(binPath)) {
+      const stderr = installResult.stderr?.trim();
+      const stdout = installResult.stdout?.trim();
+      throw new Error(
+        stderr ||
+          stdout ||
+          "Supabase CLI binary could not be installed automatically from the pinned package.",
+      );
+    }
   }
 
   return binPath;
@@ -198,9 +213,7 @@ export const formatSupabaseRuntimeFailure = ({ stdout = "", stderr = "" } = {}) 
   const daemonUnavailable = lines
     .map((line) => line.match(/Cannot connect to the Docker daemon.*$/i)?.[0] ?? "")
     .find(Boolean);
-  const dockerDesktopHint = lines.find((line) =>
-    /Docker Desktop is a prerequisite/i.test(line),
-  );
+  const dockerDesktopHint = lines.find((line) => /Docker Desktop is a prerequisite/i.test(line));
 
   if (daemonUnavailable || dockerDesktopHint) {
     return [
@@ -225,7 +238,17 @@ const writeSupabaseFailure = (result) => {
   process.stderr.write(`${message}\n`);
 };
 
-const syncStatusIntoEnv = (settings) => {
+export const buildDopplerSupabaseSecrets = (settings) => ({
+  SUPABASE_URL: settings.supabaseUrl,
+  SUPABASE_DB_URL: settings.supabaseDbUrl,
+  SUPABASE_STUDIO_URL: settings.supabaseStudioUrl,
+  SUPABASE_INBUCKET_URL: settings.supabaseInbucketUrl,
+  SUPABASE_ANON_KEY: settings.supabaseAnonKey,
+  SUPABASE_SERVICE_ROLE_KEY: settings.supabaseServiceRoleKey,
+  ...(settings.supabaseJwtSecret ? { SUPABASE_JWT_SECRET: settings.supabaseJwtSecret } : {}),
+});
+
+const syncStatusIntoDoppler = (settings) => {
   const result = runSupabase(["status", "-o", "env"], { capture: true });
   if (result.status !== 0) {
     writeSupabaseFailure(result);
@@ -246,7 +269,15 @@ const syncStatusIntoEnv = (settings) => {
   };
 
   writeGeneratedFiles(syncedSettings);
-  process.stdout.write(`synced Supabase runtime env to ${path.relative(repoRoot, envPath)}\n`);
+  const dopplerSource = {
+    ...process.env,
+    DOPPLER_PROJECT: syncedSettings.dopplerProject,
+    DOPPLER_CONFIG: syncedSettings.dopplerConfig,
+  };
+  const updatedSecrets = setSecretsSync(buildDopplerSupabaseSecrets(syncedSettings), dopplerSource);
+  process.stdout.write(
+    `synced Supabase runtime values to Doppler (${updatedSecrets.join(", ")}) and refreshed ${path.relative(repoRoot, envPath)} metadata\n`,
+  );
 };
 
 const printPreparedSummary = (settings) => {
@@ -287,7 +318,7 @@ const main = () => {
   }
 
   if (command === "env") {
-    syncStatusIntoEnv(settings);
+    syncStatusIntoDoppler(settings);
     return;
   }
 
@@ -299,7 +330,7 @@ const main = () => {
     }
 
     if (command === "start" || command === "status") {
-      syncStatusIntoEnv(settings);
+      syncStatusIntoDoppler(settings);
     }
     return;
   }

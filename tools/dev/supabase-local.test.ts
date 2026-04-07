@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildDopplerSupabaseSecrets,
   deriveSupabaseLocalSettings,
-  formatSupabaseRuntimeFailure,
   formatManagedEnvBlock,
+  formatSupabaseRuntimeFailure,
   parseStatusEnv,
   renderSupabaseTemplate,
   upsertManagedBlock,
@@ -54,7 +55,28 @@ describe("upsertManagedBlock", () => {
 
     expect(updated).toContain("CUSTOM_VALUE=1");
     expect(updated).not.toContain("OLD_VALUE=1");
-    expect(updated).toContain(`SUPABASE_URL=http://127.0.0.1:${settings.apiPort}`);
+    expect(updated).toContain("DOPPLER_PROJECT=wanderlust");
+    expect(updated).toContain("DOPPLER_CONFIG=local_main");
+    expect(updated).toContain(`SUPABASE_API_PORT=${settings.apiPort}`);
+    expect(updated).not.toContain("SUPABASE_URL=");
+  });
+});
+
+describe("buildDopplerSupabaseSecrets", () => {
+  it("maps runtime Supabase values into the Doppler secret set", () => {
+    const settings = deriveSupabaseLocalSettings({
+      cwd: "/tmp/GOT-40",
+      existingEnv: {},
+    });
+
+    expect(buildDopplerSupabaseSecrets(settings)).toMatchObject({
+      SUPABASE_URL: `http://127.0.0.1:${settings.apiPort}`,
+      SUPABASE_DB_URL: `postgresql://postgres:postgres@127.0.0.1:${settings.dbPort}/postgres`,
+      SUPABASE_STUDIO_URL: `http://127.0.0.1:${settings.studioPort}`,
+      SUPABASE_INBUCKET_URL: `http://127.0.0.1:${settings.inbucketPort}`,
+      SUPABASE_ANON_KEY: "local-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: "local-service-role-key",
+    });
   });
 });
 

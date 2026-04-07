@@ -9,6 +9,9 @@ import { loadAppEnv, resetAppEnvCache } from "./index";
 const managedKeys = [
   "APP_NAME",
   "WANDERLUST_SECRETS_MODE",
+  "DOPPLER_TOKEN",
+  "TEMPORAL_ADDRESS",
+  "TEMPORAL_NAMESPACE",
   "SUPABASE_URL",
   "SUPABASE_ANON_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
@@ -45,17 +48,21 @@ afterEach(() => {
 });
 
 describe("loadAppEnv", () => {
-  it("lets .env.local override values loaded from .env", async () => {
+  it("lets .env.local override non-secret base values loaded from .env", async () => {
     const tempDir = createTempRepo({
       ".env": "APP_NAME=Base Wanderlust\nSUPABASE_URL=http://127.0.0.1:54321\n",
-      ".env.local":
-        "APP_NAME=Local Wanderlust\nSUPABASE_URL=http://127.0.0.1:56530\nSUPABASE_ANON_KEY=anon\nSUPABASE_SERVICE_ROLE_KEY=service\n",
+      ".env.local": "APP_NAME=Local Wanderlust\n",
     });
 
-    process.env.WANDERLUST_SECRETS_MODE = "env";
-
     const env = await loadAppEnv({
-      source: process.env,
+      source: {
+        WANDERLUST_SECRETS_MODE: "env",
+        TEMPORAL_ADDRESS: "localhost:7233",
+        TEMPORAL_NAMESPACE: "default",
+        SUPABASE_URL: "http://127.0.0.1:56530",
+        SUPABASE_ANON_KEY: "anon",
+        SUPABASE_SERVICE_ROLE_KEY: "service",
+      },
       repoRoot: tempDir,
       forceReload: true,
     });
@@ -67,17 +74,20 @@ describe("loadAppEnv", () => {
   it("preserves shell-provided values over .env files", async () => {
     const tempDir = createTempRepo({
       ".env": "APP_NAME=Base Wanderlust\n",
-      ".env.local": "APP_NAME=Local Wanderlust\nSUPABASE_ANON_KEY=anon\nSUPABASE_SERVICE_ROLE_KEY=service\n",
+      ".env.local":
+        "APP_NAME=Local Wanderlust\nSUPABASE_ANON_KEY=anon\nSUPABASE_SERVICE_ROLE_KEY=service\n",
     });
 
-    process.env.APP_NAME = "Shell Wanderlust";
-    process.env.WANDERLUST_SECRETS_MODE = "env";
-    process.env.SUPABASE_URL = "http://127.0.0.1:56530";
-    process.env.SUPABASE_ANON_KEY = "shell-anon";
-    process.env.SUPABASE_SERVICE_ROLE_KEY = "shell-service";
-
     const env = await loadAppEnv({
-      source: process.env,
+      source: {
+        APP_NAME: "Shell Wanderlust",
+        WANDERLUST_SECRETS_MODE: "env",
+        TEMPORAL_ADDRESS: "localhost:7233",
+        TEMPORAL_NAMESPACE: "default",
+        SUPABASE_URL: "http://127.0.0.1:56530",
+        SUPABASE_ANON_KEY: "shell-anon",
+        SUPABASE_SERVICE_ROLE_KEY: "shell-service",
+      },
       repoRoot: tempDir,
       forceReload: true,
     });
@@ -85,16 +95,49 @@ describe("loadAppEnv", () => {
     expect(env.APP_NAME).toBe("Shell Wanderlust");
   });
 
-  it("reloads previously file-backed values when forceReload is requested", async () => {
+  it("keeps Doppler secrets authoritative over local env file values", async () => {
     const tempDir = createTempRepo({
       ".env.local":
-        "APP_NAME=First Wanderlust\nSUPABASE_URL=http://127.0.0.1:56530\nSUPABASE_ANON_KEY=anon\nSUPABASE_SERVICE_ROLE_KEY=service\n",
+        "APP_NAME=Local Wanderlust\nSUPABASE_URL=http://127.0.0.1:56530\nSUPABASE_ANON_KEY=file-anon\nSUPABASE_SERVICE_ROLE_KEY=file-service\n",
     });
 
-    process.env.WANDERLUST_SECRETS_MODE = "env";
+    const env = await loadAppEnv({
+      source: {
+        WANDERLUST_SECRETS_MODE: "doppler",
+        DOPPLER_TOKEN: "dp.st.local_main.test",
+      },
+      repoRoot: tempDir,
+      forceRefresh: true,
+      secretLoader: async () => ({
+        TEMPORAL_ADDRESS: "localhost:7233",
+        TEMPORAL_NAMESPACE: "default",
+        SUPABASE_URL: "http://127.0.0.1:55421",
+        SUPABASE_ANON_KEY: "doppler-anon",
+        SUPABASE_SERVICE_ROLE_KEY: "doppler-service",
+      }),
+    });
+
+    expect(env.APP_NAME).toBe("Local Wanderlust");
+    expect(env.SUPABASE_URL).toBe("http://127.0.0.1:55421");
+    expect(env.SUPABASE_ANON_KEY).toBe("doppler-anon");
+    expect(env.SUPABASE_SERVICE_ROLE_KEY).toBe("doppler-service");
+  });
+
+  it("reloads previously file-backed values when forceReload is requested", async () => {
+    const tempDir = createTempRepo({
+      ".env.local": "APP_NAME=First Wanderlust\n",
+    });
+    const source = {
+      WANDERLUST_SECRETS_MODE: "env",
+      TEMPORAL_ADDRESS: "localhost:7233",
+      TEMPORAL_NAMESPACE: "default",
+      SUPABASE_URL: "http://127.0.0.1:56530",
+      SUPABASE_ANON_KEY: "anon",
+      SUPABASE_SERVICE_ROLE_KEY: "service",
+    };
 
     const firstEnv = await loadAppEnv({
-      source: process.env,
+      source,
       repoRoot: tempDir,
       forceReload: true,
     });
@@ -102,19 +145,15 @@ describe("loadAppEnv", () => {
     expect(firstEnv.APP_NAME).toBe("First Wanderlust");
     expect(firstEnv.SUPABASE_URL).toBe("http://127.0.0.1:56530");
 
-    fs.writeFileSync(
-      path.join(tempDir, ".env.local"),
-      "APP_NAME=Reloaded Wanderlust\nSUPABASE_URL=http://127.0.0.1:56531\nSUPABASE_ANON_KEY=anon\nSUPABASE_SERVICE_ROLE_KEY=service\n",
-      "utf8",
-    );
+    fs.writeFileSync(path.join(tempDir, ".env.local"), "APP_NAME=Reloaded Wanderlust\n", "utf8");
 
     const reloadedEnv = await loadAppEnv({
-      source: process.env,
+      source,
       repoRoot: tempDir,
       forceReload: true,
     });
 
     expect(reloadedEnv.APP_NAME).toBe("Reloaded Wanderlust");
-    expect(reloadedEnv.SUPABASE_URL).toBe("http://127.0.0.1:56531");
+    expect(reloadedEnv.SUPABASE_URL).toBe("http://127.0.0.1:56530");
   });
 });

@@ -4,14 +4,15 @@
 Every task should be bootable in an isolated workspace.
 
 ## Current first-slice behavior
-- export `DOPPLER_TOKEN` before starting the runtime or Symphony operator
+- configure a scoped write-capable Doppler token before starting the runtime or Symphony operator:
+  - `doppler configure set token=... project=wanderlust config=local_main --scope /path/to/repo-or-worktree`
 - root `corepack pnpm dev` auto-runs `supabase:prepare`
 - web dev server picks a local port
 - worker runs separately
 - `.env.example` documents Doppler selectors plus the local fallback keys used only when `WANDERLUST_SECRETS_MODE=env`
 - `corepack pnpm supabase:prepare` renders a worktree-local `supabase/config.toml`
-- `corepack pnpm supabase:start` syncs runtime keys back into root `.env.local`
-- shared config loads root `.env` and `.env.local` for the web app and worker before resolving Doppler or env-mode secrets
+- `corepack pnpm supabase:start` and `corepack pnpm supabase:status` sync live `SUPABASE_*` values into Doppler `wanderlust/local_main`
+- shared config loads root `.env` and `.env.local` for local metadata before resolving Doppler or env-mode secrets
 
 ## Future additions
 - local observability stack per workspace
@@ -24,5 +25,5 @@ Every task should be bootable in an isolated workspace.
 3. Inspect the stack with `corepack pnpm supabase:status`.
 4. Stop it with `corepack pnpm supabase:stop`.
 
-The bootstrap script derives stable ports from the worktree name, writes `supabase/config.toml` from the tracked template, and manages a marked block inside root `.env.local`. Docker and the Supabase CLI binary are still local prerequisites; this repo now pins the CLI and generates the per-worktree config around it.
+The bootstrap script derives stable ports from the worktree name, writes `supabase/config.toml` from the tracked template, manages a marked metadata block inside root `.env.local`, and syncs live local Supabase runtime values into Doppler for the app and worker. Docker and the Supabase CLI binary are still local prerequisites; this repo now pins the CLI and generates the per-worktree config around it.
 `corepack pnpm supabase:prepare` works without Docker. `supabase:start`, `supabase:status`, and `supabase:env` now surface explicit Docker prerequisite errors from the Supabase runtime when the daemon is unavailable.
