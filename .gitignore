@@ -7,12 +7,16 @@ playwright-report
 test-results
 .env
 .env.local
+*.tsbuildinfo
+supabase/config.toml
+supabase/.temp/
 .DS_Store
 .temporal
 .symphony/*.json
 .symphony/*.log
 .symphony/workspaces/*
 !.symphony/workspaces/.gitkeep
+.symphony-ready.json
 apps/web/.next
 workers/temporal/dist
 *.tsbuildinfo

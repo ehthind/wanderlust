@@ -42,6 +42,7 @@ The current workflow uses upstream Symphony's default workspace model:
 - create an empty per-issue workspace under the configured root
 - run `hooks.after_create`
 - clone Wanderlust into that workspace
+- render the worktree-local Supabase scaffold inside the cloned repo
 - run repo-local hooks inside the cloned repo
 
 Proof artifacts still come from the repo-local `after_run` flow.

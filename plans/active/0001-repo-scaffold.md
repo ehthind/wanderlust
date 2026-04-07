@@ -18,6 +18,7 @@ Create the initial Wanderlust monorepo scaffold with:
 ## Progress
 - [x] repo skeleton created
 - [x] upstream Symphony wrapper and workflow contract added
+- [x] local Supabase bootstrap scaffolded for isolated worktrees
 - [ ] app and worker shells boot locally
 - [x] checks and smoke tests pass
 - [ ] CI runs the baseline suite
