@@ -3,7 +3,12 @@
 ## Defaults
 - `DOPPLER_TOKEN` is the global credential for Wanderlust local development, Symphony runs, and future CI automation.
 - `DOPPLER_PROJECT` should default to `wanderlust`.
-- `DOPPLER_CONFIG` should match the target environment such as `local`, `dev`, `staging`, or `prod`.
+- `DOPPLER_CONFIG` should default to `local_main` for local development.
+- Doppler config names for Wanderlust are:
+  - `local_main`
+  - `dev`
+  - `stg`
+  - `prd`
 - `WANDERLUST_SECRETS_MODE=doppler` is the normal runtime path.
 
 ## CLI expectations
