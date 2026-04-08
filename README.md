@@ -46,6 +46,7 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - `apps/web` is the only runtime targeted at Vercel.
 - Preview and production deployments should come from the Git-connected Vercel project flow.
 - Doppler remains the secret source of truth; Vercel envs are synced from Doppler configs.
+- Manual fallback deploys are available via `corepack pnpm vercel:deploy:preview` and `corepack pnpm vercel:deploy:prod`.
 - See `docs/runbooks/vercel.md` for the exact setup path.
 
 ## Delivery policy
