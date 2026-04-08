@@ -1,0 +1,8 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "corepack pnpm install --frozen-lockfile && corepack pnpm --filter @wanderlust/temporal-worker build"
+
+[deploy]
+startCommand = "node workers/temporal/dist/worker.js"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

@@ -1,3 +1,4 @@
-import { loadTripWorkspace } from "./service";
+import { createTripWorkspaceService } from "./service";
 
-export const getTripWorkspaceModel = () => loadTripWorkspace();
+export const getTripWorkspaceModel = (id: string) =>
+  createTripWorkspaceService().loadTripWorkspace(id);

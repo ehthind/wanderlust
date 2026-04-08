@@ -4,6 +4,7 @@ Plans are first-class artifacts in this repository.
 
 ## Active
 - [0001 Repo scaffold](plans/active/0001-repo-scaffold.md)
+- [0009 Temporal Plan Trip Platform](plans/active/0009-temporal-plan-trip-platform.md)
 
 ## Completed
 - [0002 Symphony execution loop](plans/completed/0002-symphony-execution-loop.md)

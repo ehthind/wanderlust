@@ -20,6 +20,7 @@
       "@wanderlust/providers/*": ["packages/providers/src/*"],
       "@wanderlust/shared-config": ["packages/shared/config/src/index.ts"],
       "@wanderlust/shared-schemas": ["packages/shared/schemas/src/index.ts"],
+      "@wanderlust/shared-supabase": ["packages/shared/supabase/src/index.ts"],
       "@wanderlust/shared-observability": ["packages/shared/observability/src/index.ts"],
       "@wanderlust/shared-logging": ["packages/shared/logging/src/index.ts"],
       "@wanderlust/shared-testing": ["packages/shared/testing/src/index.ts"],

@@ -49,6 +49,8 @@ describe("loadAppEnv", () => {
         WANDERLUST_SECRETS_MODE: "env",
         TEMPORAL_ADDRESS: "localhost:7233",
         TEMPORAL_NAMESPACE: "default",
+        TEMPORAL_TASK_QUEUE: "wanderlust",
+        TEMPORAL_UI_URL: "http://127.0.0.1:8233",
         SUPABASE_URL: "http://127.0.0.1:54321",
         SUPABASE_ANON_KEY: "anon",
         SUPABASE_SERVICE_ROLE_KEY: "service-role",
@@ -58,6 +60,7 @@ describe("loadAppEnv", () => {
     expect(env.WANDERLUST_SECRETS_MODE).toBe("env");
     expect(env.SUPABASE_URL).toBe("http://127.0.0.1:54321");
     expect(env.TEMPORAL_ADDRESS).toBe("localhost:7233");
+    expect(env.TEMPORAL_TASK_QUEUE).toBe("wanderlust");
   });
 
   it("caches the startup secret fetch for the default process env", async () => {
@@ -76,6 +79,8 @@ describe("loadAppEnv", () => {
       return {
         TEMPORAL_ADDRESS: "localhost:7233",
         TEMPORAL_NAMESPACE: "default",
+        TEMPORAL_TASK_QUEUE: "wanderlust",
+        TEMPORAL_UI_URL: "http://127.0.0.1:8233",
         SUPABASE_URL: "http://127.0.0.1:54321",
         SUPABASE_ANON_KEY: "anon",
         SUPABASE_SERVICE_ROLE_KEY: "service-role",

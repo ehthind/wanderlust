@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { previewDestinationBooking } from "./activities/fake-booking";
+import { buildPlanTripSummary } from "./activities/plan-trip";
 
-describe("previewDestinationBooking", () => {
-  it("returns a confirmed booking from the fake provider", async () => {
-    await expect(previewDestinationBooking("dest_paris")).resolves.toMatchObject({
-      destinationId: "dest_paris",
-      status: "confirmed",
-    });
+describe("buildPlanTripSummary", () => {
+  it("returns a summary for the trip draft", async () => {
+    await expect(
+      buildPlanTripSummary({
+        tripDraftId: "trip_test",
+        destinationId: "dest_paris",
+        travelerCount: 2,
+        vibe: "romantic",
+        budgetStyle: "balanced",
+      }),
+    ).resolves.toContain("dest_paris");
   });
 });

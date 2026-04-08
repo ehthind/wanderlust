@@ -6,10 +6,13 @@
   "engines": {
     "node": ">=22.0.0"
   },
+  "dependencies": {
+    "@temporalio/client": "^1.11.4"
+  },
   "scripts": {
-    "dev": "corepack pnpm supabase:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm -r --parallel --stream --filter @wanderlust/web --filter @wanderlust/temporal-worker dev",
-    "dev:web": "corepack pnpm supabase:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm --filter @wanderlust/web dev",
-    "dev:worker": "corepack pnpm supabase:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm --filter @wanderlust/temporal-worker dev",
+    "dev": "corepack pnpm supabase:prepare && corepack pnpm temporal:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm -r --parallel --stream --filter @wanderlust/web --filter @wanderlust/temporal-worker dev",
+    "dev:web": "corepack pnpm supabase:prepare && corepack pnpm temporal:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm --filter @wanderlust/web dev",
+    "dev:worker": "corepack pnpm supabase:prepare && corepack pnpm temporal:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm --filter @wanderlust/temporal-worker dev",
     "dev:hosted": "node tools/dev/run-with-doppler-config.mjs dev -- corepack pnpm -r --parallel --stream --filter @wanderlust/web --filter @wanderlust/temporal-worker dev",
     "dev:hosted:web": "node tools/dev/run-with-doppler-config.mjs dev -- corepack pnpm --filter @wanderlust/web dev",
     "dev:hosted:worker": "node tools/dev/run-with-doppler-config.mjs dev -- corepack pnpm --filter @wanderlust/temporal-worker dev",
@@ -19,6 +22,13 @@
     "supabase:stop": "node tools/dev/supabase-local.mjs stop",
     "supabase:env": "node tools/dev/supabase-local.mjs env",
     "supabase:push:hosted": "node tools/dev/push-hosted-supabase.mjs dev",
+    "temporal:prepare": "node tools/dev/temporal-local.mjs prepare",
+    "temporal:start": "node tools/dev/temporal-local.mjs start",
+    "temporal:status": "node tools/dev/temporal-local.mjs status",
+    "temporal:stop": "node tools/dev/temporal-local.mjs stop",
+    "temporal:env": "node tools/dev/temporal-local.mjs env",
+    "temporal:cloud:env:dev": "node tools/dev/run-with-doppler-config.mjs dev -- node tools/dev/temporal-cloud.mjs env",
+    "temporal:cloud:env:prod": "node tools/dev/run-with-doppler-config.mjs prd -- node tools/dev/temporal-cloud.mjs env",
     "vercel:whoami": "node tools/vercel/run.mjs whoami",
     "vercel:login": "node tools/vercel/run.mjs login",
     "vercel:link": "node tools/vercel/run.mjs link --repo",
@@ -29,6 +39,11 @@
     "vercel:env:prod": "node tools/vercel/sync-env.mjs production",
     "vercel:deploy:preview": "node tools/vercel/run.mjs deploy --yes --logs",
     "vercel:deploy:prod": "node tools/vercel/run.mjs deploy --prod --yes --logs",
+    "railway:whoami": "node tools/railway/run.mjs whoami",
+    "railway:login": "node tools/railway/run.mjs login",
+    "railway:link": "node tools/railway/run.mjs link",
+    "railway:env:dev": "node tools/dev/run-with-doppler-config.mjs dev -- node tools/railway/sync-env.mjs dev",
+    "railway:deploy:worker": "node tools/railway/run.mjs up --service temporal-worker --detach",
     "build": "corepack pnpm -r --filter @wanderlust/web --filter @wanderlust/temporal-worker build",
     "test": "corepack pnpm -r --filter @wanderlust/web --filter @wanderlust/temporal-worker test && corepack pnpm test:repo",
     "test:repo": "vitest run --config ./vitest.repo.config.ts",

@@ -1,3 +1,3 @@
 import { getTripWorkspaceModel } from "./runtime";
 
-export const getTripWorkspaceView = () => getTripWorkspaceModel();
+export const getTripWorkspaceView = (id: string) => getTripWorkspaceModel(id);

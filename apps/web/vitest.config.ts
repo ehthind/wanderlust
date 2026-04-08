@@ -9,6 +9,18 @@ export default defineConfig({
         import.meta.dirname,
         "../../packages/domains/destinations/src/index.ts",
       ),
+      "@wanderlust/domains/trips": path.resolve(
+        import.meta.dirname,
+        "../../packages/domains/trips/src/index.ts",
+      ),
+      "@wanderlust/providers/workflow": path.resolve(
+        import.meta.dirname,
+        "../../packages/providers/src/workflow/index.ts",
+      ),
+      "@wanderlust/shared-config": path.resolve(
+        import.meta.dirname,
+        "../../packages/shared/config/src/index.ts",
+      ),
       "@wanderlust/shared-ui": path.resolve(
         import.meta.dirname,
         "../../packages/shared/ui/src/index.ts",
@@ -24,6 +36,10 @@ export default defineConfig({
       "@wanderlust/shared-schemas": path.resolve(
         import.meta.dirname,
         "../../packages/shared/schemas/src/index.ts",
+      ),
+      "@wanderlust/shared-supabase": path.resolve(
+        import.meta.dirname,
+        "../../packages/shared/supabase/src/index.ts",
       ),
     },
   },

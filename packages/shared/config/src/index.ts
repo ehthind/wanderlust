@@ -156,6 +156,9 @@ const baseEnvSchema = z.object({
 const secretSchema = z.object({
   TEMPORAL_ADDRESS: z.string().min(1),
   TEMPORAL_NAMESPACE: z.string().min(1),
+  TEMPORAL_TASK_QUEUE: z.string().min(1),
+  TEMPORAL_UI_URL: z.string().url().or(z.string().startsWith("http://127.0.0.1")),
+  TEMPORAL_API_KEY: z.string().optional(),
   SUPABASE_URL: z.string().url().or(z.string().startsWith("http://127.0.0.1")),
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),

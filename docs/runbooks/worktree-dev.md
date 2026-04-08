@@ -7,17 +7,18 @@ Every task should be bootable in an isolated workspace.
 - configure a scoped write-capable Doppler token before starting the runtime or Symphony operator:
   - `doppler configure set token=... project=wanderlust config=local_main --scope /path/to/repo-or-worktree`
 - root `corepack pnpm dev` auto-runs `supabase:prepare`
+- root `corepack pnpm dev` also auto-runs `temporal:prepare`
 - root `corepack pnpm dev:hosted` runs the app and worker against Doppler `dev` without starting the local Supabase stack
 - web dev server picks a local port
 - worker runs separately
 - `.env.example` documents Doppler selectors plus the local fallback keys used only when `WANDERLUST_SECRETS_MODE=env`
 - `corepack pnpm supabase:prepare` renders a worktree-local `supabase/config.toml`
 - `corepack pnpm supabase:start` and `corepack pnpm supabase:status` sync live `SUPABASE_*` values into Doppler `wanderlust/local_main`
+- `corepack pnpm temporal:start` and `corepack pnpm temporal:status` sync live `TEMPORAL_*` values into Doppler `wanderlust/local_main`
 - shared config loads root `.env` and `.env.local` for local metadata before resolving Doppler or env-mode secrets
 
-## Future additions
+## Local platform additions
 - local observability stack per workspace
-- local Temporal dev server automation
 - browser proof and video capture
 
 ## Supabase workflow
@@ -43,3 +44,17 @@ The bootstrap script derives stable ports from the worktree name, writes `supaba
 
 The hosted scripts force `DOPPLER_CONFIG=dev` for the child process and reuse the same guarded runtime path as local development.
 They also force `DOPPLER_SCOPE=/Users/amritthind/code` so hosted `dev` reads come from the broader Doppler login instead of the repo-scoped `local_main` token.
+
+## Temporal workflow
+### Local stack
+1. Run `corepack pnpm temporal:prepare` after `corepack pnpm install`, or let `corepack pnpm dev`, `corepack pnpm dev:web`, or `corepack pnpm dev:worker` do it automatically.
+2. Start the local server with `corepack pnpm temporal:start`.
+3. Inspect the local server with `corepack pnpm temporal:status`.
+4. Stop it with `corepack pnpm temporal:stop`.
+
+The Temporal bootstrap derives stable per-worktree ports, persists runtime state under `.temporal/<worktree-slug>/`, maintains a marked metadata block in `.env.local`, and syncs `TEMPORAL_ADDRESS`, `TEMPORAL_NAMESPACE`, `TEMPORAL_TASK_QUEUE`, and `TEMPORAL_UI_URL` into Doppler for the app and worker.
+
+### Hosted worker target
+- Railway is the planned hosted worker target for shared `dev` and later `prd`
+- Temporal Cloud remains the managed service target
+- use `corepack pnpm railway:env:dev` once the Railway service is linked so the worker runtime matches Doppler `wanderlust/dev`
