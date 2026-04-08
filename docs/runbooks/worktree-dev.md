@@ -34,9 +34,12 @@ The bootstrap script derives stable ports from the worktree name, writes `supaba
 - the root repo is linked to the hosted Supabase dev project `wanderlust-dev`
 - project ref: `rgzbypwrwkoiczutdyfu`
 - Doppler `wanderlust/dev` holds the hosted `SUPABASE_*` runtime values
+- Doppler `wanderlust/dev` should also hold `SUPABASE_DB_PASSWORD` for repeatable hosted schema pushes
 - use the hosted path when you want app/worker behavior against cloud Supabase without bringing up local containers:
   - `corepack pnpm dev:hosted`
   - `corepack pnpm dev:hosted:web`
   - `corepack pnpm dev:hosted:worker`
+  - `corepack pnpm supabase:push:hosted`
 
 The hosted scripts force `DOPPLER_CONFIG=dev` for the child process and reuse the same guarded runtime path as local development.
+They also force `DOPPLER_SCOPE=/Users/amritthind/code` so hosted `dev` reads come from the broader Doppler login instead of the repo-scoped `local_main` token.

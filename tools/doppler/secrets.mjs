@@ -6,6 +6,10 @@ const DEFAULT_MODE = "doppler";
 const withProjectAndConfig = (args, source = process.env) => {
   const scopedArgs = [...args];
 
+  if (source.DOPPLER_SCOPE) {
+    scopedArgs.push("--scope", source.DOPPLER_SCOPE);
+  }
+
   if (source.DOPPLER_PROJECT) {
     scopedArgs.push("--project", source.DOPPLER_PROJECT);
   }

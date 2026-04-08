@@ -133,6 +133,7 @@ const baseEnvSchema = z.object({
   DOPPLER_BIN: z.string().default("doppler"),
   DOPPLER_PROJECT: z.string().optional(),
   DOPPLER_CONFIG: z.string().optional(),
+  DOPPLER_SCOPE: z.string().optional(),
   DOPPLER_TOKEN: z.string().optional(),
 });
 
@@ -186,6 +187,7 @@ export const getBaseEnv = (source: NodeJS.ProcessEnv = process.env): BaseEnv => 
     DOPPLER_BIN: parsed.DOPPLER_BIN,
     DOPPLER_PROJECT: parsed.DOPPLER_PROJECT,
     DOPPLER_CONFIG: parsed.DOPPLER_CONFIG,
+    DOPPLER_SCOPE: parsed.DOPPLER_SCOPE,
     WANDERLUST_SECRETS_MODE: getSecretsMode(source),
   };
 };
@@ -205,6 +207,10 @@ export const downloadDopplerSecrets: SecretLoader = async ({ source, baseEnv }) 
 
   if (baseEnv.DOPPLER_CONFIG) {
     args.push("--config", baseEnv.DOPPLER_CONFIG);
+  }
+
+  if (baseEnv.DOPPLER_SCOPE) {
+    args.push("--scope", baseEnv.DOPPLER_SCOPE);
   }
 
   let result: { stdout: string; stderr: string };

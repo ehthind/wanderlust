@@ -18,6 +18,7 @@
     "supabase:status": "node tools/dev/supabase-local.mjs status",
     "supabase:stop": "node tools/dev/supabase-local.mjs stop",
     "supabase:env": "node tools/dev/supabase-local.mjs env",
+    "supabase:push:hosted": "node tools/dev/push-hosted-supabase.mjs dev",
     "build": "corepack pnpm -r --filter @wanderlust/web --filter @wanderlust/temporal-worker build",
     "test": "corepack pnpm -r --filter @wanderlust/web --filter @wanderlust/temporal-worker test && corepack pnpm test:repo",
     "test:repo": "vitest run --config ./vitest.repo.config.ts",

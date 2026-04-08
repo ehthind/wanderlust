@@ -2,6 +2,7 @@ import { execWithSecretsGuard } from "../doppler/secrets.mjs";
 
 const [, , dopplerConfig, ...argv] = process.argv;
 const command = argv[0] === "--" ? argv.slice(1) : argv;
+const sharedScope = new URL("../../../", import.meta.url).pathname;
 
 if (!dopplerConfig || command.length === 0) {
   process.stderr.write(
@@ -14,4 +15,5 @@ execWithSecretsGuard(command, {
   ...process.env,
   DOPPLER_PROJECT: process.env.DOPPLER_PROJECT ?? "wanderlust",
   DOPPLER_CONFIG: dopplerConfig,
+  DOPPLER_SCOPE: process.env.DOPPLER_SCOPE ?? sharedScope,
 });

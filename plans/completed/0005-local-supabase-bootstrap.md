@@ -23,4 +23,4 @@ Set up a reproducible local Supabase bootstrap for Wanderlust that works inside 
 - [x] updated Symphony bootstrap hooks and runbooks
 - [x] recorded workspace-local proof artifacts
 - [x] synced Supabase runtime values into Doppler instead of writing them into `.env.local`
-- [ ] validate `supabase start/status` against a Docker-enabled local environment with a scoped write-capable Doppler token configured
+- [x] validated `supabase start/status` against a Docker-enabled local environment with a scoped write-capable Doppler token configured

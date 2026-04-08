@@ -29,5 +29,7 @@
 - `dev` now maps to the hosted Supabase project `wanderlust-dev`
 - project ref: `rgzbypwrwkoiczutdyfu`
 - the root repo is linked to that project via `supabase link`
+- store `SUPABASE_DB_PASSWORD` in `wanderlust/dev` so hosted schema pushes can run from the repo without dashboard-only state
 - use the broader Doppler CLI login at `/Users/amritthind/code` for admin writes to non-local configs such as `dev`, `stg`, and `prd`
+- hosted helper scripts force `DOPPLER_SCOPE=/Users/amritthind/code` so they bypass the repo-scoped `local_main` token when reading `dev`
 - run `corepack pnpm dev:hosted` when you want the app and worker to read managed `dev` secrets instead of the local Supabase stack
