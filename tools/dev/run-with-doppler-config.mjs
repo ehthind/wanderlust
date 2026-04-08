@@ -1,8 +1,10 @@
+import path from "node:path";
+
 import { execWithSecretsGuard } from "../doppler/secrets.mjs";
 
 const [, , dopplerConfig, ...argv] = process.argv;
 const command = argv[0] === "--" ? argv.slice(1) : argv;
-const sharedScope = new URL("../../../", import.meta.url).pathname;
+const sharedScope = path.resolve(new URL("../../../", import.meta.url).pathname);
 
 if (!dopplerConfig || command.length === 0) {
   process.stderr.write(

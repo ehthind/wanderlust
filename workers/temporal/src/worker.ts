@@ -1,3 +1,7 @@
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { NativeConnection, Worker } from "@temporalio/worker";
 
 import { loadAppEnv } from "@wanderlust/shared-config";
@@ -10,6 +14,17 @@ const logger = createLogger("temporal-worker", {
   includeTrace: true,
 });
 
+const resolveWorkflowPath = () => {
+  const currentDirectory = dirname(fileURLToPath(import.meta.url));
+  const compiledWorkflowPath = join(currentDirectory, "workflows", "plan-trip.js");
+
+  if (existsSync(compiledWorkflowPath)) {
+    return compiledWorkflowPath;
+  }
+
+  return join(currentDirectory, "workflows", "plan-trip.ts");
+};
+
 const run = async () => {
   const env = await loadAppEnv();
   const connection = await NativeConnection.connect({
@@ -21,7 +36,7 @@ const run = async () => {
     connection,
     namespace: env.TEMPORAL_NAMESPACE,
     taskQueue: env.TEMPORAL_TASK_QUEUE,
-    workflowsPath: new URL("./workflows/plan-trip.ts", import.meta.url).pathname,
+    workflowsPath: resolveWorkflowPath(),
     activities,
   });
 

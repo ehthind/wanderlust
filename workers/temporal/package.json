@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node ../../tools/dev/guard-secrets.mjs -- tsx watch src/worker.ts",
-    "build": "tsc -p tsconfig.json --outDir dist",
+    "build": "tsc -p tsconfig.json --outDir dist && node ./scripts/postbuild.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --config ./vitest.config.ts"
   },

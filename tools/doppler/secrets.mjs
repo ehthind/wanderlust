@@ -31,11 +31,26 @@ export const resolveSecretsMode = (source = process.env) => {
 
 export const getDopplerBin = (source = process.env) => source.DOPPLER_BIN ?? DEFAULT_BIN;
 
-const runDopplerSync = (args, source = process.env) =>
-  spawnSync(getDopplerBin(source), args, {
+const shellEscape = (value) => `'${String(value).replace(/'/g, `'\\''`)}'`;
+
+const runDopplerSync = (args, source = process.env) => {
+  const env = { ...source };
+  const scope = source.DOPPLER_SCOPE ?? process.cwd();
+  const command = [
+    "cd",
+    shellEscape(scope),
+    "&&",
+    shellEscape(getDopplerBin(source)),
+    ...args.map(shellEscape),
+  ].join(" ");
+
+  delete env.DOPPLER_SCOPE;
+
+  return spawnSync("/bin/zsh", ["-lc", command], {
     encoding: "utf8",
-    env: source,
+    env,
   });
+};
 
 export const assertDopplerReadySync = (source = process.env) => {
   if (resolveSecretsMode(source) === "env") {
