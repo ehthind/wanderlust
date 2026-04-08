@@ -13,6 +13,7 @@ Plans are first-class artifacts in this repository.
 - [0005 Local Supabase bootstrap](plans/completed/0005-local-supabase-bootstrap.md)
 - [0006 Doppler secrets manager](plans/completed/0006-doppler-secrets-manager.md)
 - [0007 Hosted Supabase dev schema](plans/completed/0007-hosted-supabase-dev-schema.md)
+- [0008 Vercel web deploy](plans/completed/0008-vercel-web-deploy.md)
 
 ## Debt
 - [Technical debt tracker](plans/debt/README.md)

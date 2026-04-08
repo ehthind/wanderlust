@@ -1,12 +1,28 @@
 import { execFile } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import { z } from "zod";
 
-const repoRoot = fileURLToPath(new URL("../../../../", import.meta.url));
+const resolveRepoRoot = (start = process.cwd()) => {
+  let current = path.resolve(start);
+
+  while (true) {
+    if (fs.existsSync(path.join(current, "pnpm-workspace.yaml"))) {
+      return current;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return path.resolve(start);
+    }
+
+    current = parent;
+  }
+};
+
+const repoRoot = resolveRepoRoot();
 const execFileAsync = promisify(execFile);
 const loadedEnvRoots = new Set<string>();
 const loadedEnvKeysByRoot = new Map<string, Set<string>>();

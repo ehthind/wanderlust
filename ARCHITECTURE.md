@@ -37,6 +37,7 @@ Cross-cutting integrations are accessed only through provider interfaces:
 - agent runtime
 
 ## Product platform
+- `Vercel` for the deployed Next.js web surface
 - `Supabase` for app state, auth, storage, and retrieval
 - `Temporal` for durable business workflows
 - `LangGraph` for agent reasoning inside selected workflows
@@ -60,3 +61,7 @@ Cross-cutting integrations are accessed only through provider interfaces:
 - `ops/observability` holds the disposable local stack for agent debugging.
 - `packages/shared/observability` holds the application-facing contracts for logs, traces, metrics, and correlation.
 - Managed sinks such as Sentry and PostHog are optional exports; local runs must still be debuggable without them.
+
+## Deployment split
+- `apps/web` can be deployed to Vercel with Doppler-projected envs.
+- `workers/temporal` remains outside Vercel and is treated as an external dependency by the web app.

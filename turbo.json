@@ -1,5 +1,26 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": [
+    "APP_NAME",
+    "SERVICE_NAME",
+    "WANDERLUST_SECRETS_MODE",
+    "DOPPLER_BIN",
+    "DOPPLER_PROJECT",
+    "DOPPLER_CONFIG",
+    "DOPPLER_SCOPE",
+    "DOPPLER_TOKEN",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "TEMPORAL_ADDRESS",
+    "TEMPORAL_NAMESPACE",
+    "OPENAI_API_KEY",
+    "INTERCOM_ACCESS_TOKEN",
+    "SENDGRID_API_KEY",
+    "SENTRY_DSN",
+    "POSTHOG_HOST",
+    "POSTHOG_KEY"
+  ],
   "tasks": {
     "dev": {
       "cache": false,

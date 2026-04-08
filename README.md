@@ -40,6 +40,13 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - `WORKFLOW.md`: Symphony contract for isolated implementation runs
 - `tools/symphony`: repo-local hooks plus wrappers for the upstream Symphony clone
 - `ops/observability`: local OTEL/Grafana-compatible stack for workspace debugging
+- `tools/vercel`: repo-local wrappers for Vercel auth, linking, env sync, and deployment fallback flows
+
+## Web deploy platform
+- `apps/web` is the only runtime targeted at Vercel.
+- Preview and production deployments should come from the Git-connected Vercel project flow.
+- Doppler remains the secret source of truth; Vercel envs are synced from Doppler configs.
+- See `docs/runbooks/vercel.md` for the exact setup path.
 
 ## Delivery policy
 - GitHub and Linear are part of the delivery loop for Symphony-run work.
