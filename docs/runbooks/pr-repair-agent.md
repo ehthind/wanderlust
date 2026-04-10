@@ -29,6 +29,9 @@ The Wanderlust PR repair agent is a GitHub App worker that watches same-repo pul
 ## Commands
 - Start the webhook worker: `corepack pnpm pr-agent:serve`
 - Replay a saved webhook payload locally: `corepack pnpm pr-agent:handle-event <event> <payload.json>`
+- Hosted Railway bootstrap:
+  - `corepack pnpm railway:env:pr-agent`
+  - `corepack pnpm railway:deploy:pr-agent`
 
 ## Behavior
 - Watches `pull_request`, `check_run`, `check_suite`, and `issue_comment` events.
@@ -39,6 +42,7 @@ The Wanderlust PR repair agent is a GitHub App worker that watches same-repo pul
 - Downloads stable `.ci-artifacts/<check>.*` files from GitHub Actions before falling back to raw check summaries.
 - Reuses `.symphony/run.json`, `.symphony/checks.json`, `.symphony/observability.json`, and `.symphony/proof.json` inside the isolated repair workspace.
 - Supports `@codex retry` and `@codex stop` PR comments.
+- Exposes `GET /healthz` for service health checks and accepts GitHub webhook `POST`s at `PR_AGENT_WEBHOOK_PATH` or `/github/webhook`.
 
 ## Guardrails
 - Ignores forked PRs in v1.

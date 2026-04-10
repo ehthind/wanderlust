@@ -27,8 +27,26 @@ if (!webhookSecret) {
 }
 
 const port = Number(process.env.PORT ?? "8787");
+const webhookPath = process.env.PR_AGENT_WEBHOOK_PATH ?? "/github/webhook";
 
 const server = http.createServer((request, response) => {
+  if (request.method === "GET" && (request.url === "/" || request.url === "/healthz")) {
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(
+      JSON.stringify({
+        status: "ok",
+        webhookPath,
+      }),
+    );
+    return;
+  }
+
+  if (request.url !== webhookPath) {
+    response.writeHead(404, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: "not_found" }));
+    return;
+  }
+
   if (request.method !== "POST") {
     response.writeHead(405, { "content-type": "application/json" });
     response.end(JSON.stringify({ error: "method_not_allowed" }));
@@ -78,5 +96,5 @@ const server = http.createServer((request, response) => {
 });
 
 server.listen(port, () => {
-  process.stdout.write(`Wanderlust PR repair agent listening on ${port}\n`);
+  process.stdout.write(`Wanderlust PR repair agent listening on ${port}${webhookPath}\n`);
 });
