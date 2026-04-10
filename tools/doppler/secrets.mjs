@@ -44,7 +44,7 @@ const runDopplerSync = (args, source = process.env) => {
     ...args.map(shellEscape),
   ].join(" ");
 
-  delete env.DOPPLER_SCOPE;
+  env.DOPPLER_SCOPE = undefined;
 
   return spawnSync("/bin/zsh", ["-lc", command], {
     encoding: "utf8",
