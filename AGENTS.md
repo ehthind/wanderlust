@@ -20,13 +20,19 @@ This repo is optimized for agent-first development. Treat this file as a map, no
 
 ## Symphony contract
 - Root `WORKFLOW.md` is the scheduler contract.
+- Root `WORKFLOW.pr.md` is the pull-request repair contract.
 - Workspace hooks live under `tools/symphony/`.
+- Pull-request repair automation lives under `tools/pr-agent/`.
+- Repo-local delivery skills live under `.codex/skills/`.
+- GitHub PR bodies must follow `.github/pull_request_template.md`.
 - Operator docs live under `ops/symphony/`.
 - Use `corepack pnpm symphony:setup` before the first upstream Symphony run in a fresh environment.
 - Use `corepack pnpm symphony:run` to invoke the upstream operator against this repo.
 - Proof-of-work artifacts must be reproducible from local commands and CI.
 - Symphony-run agents are allowed to write to GitHub and Linear for this repo's delivery loop when the run policy calls for it.
-- Do not bypass branch protection on `main`; prefer draft PR -> ready PR -> auto-merge.
+- The PR repair worker mirrors CI remediation into both the PR workpad comment and the linked Linear `## Codex Workpad` comment.
+- Do not bypass GitHub platform gates on `main`; prefer draft PR ->
+  `Human Review` -> `Merging` -> Symphony-controlled squash merge.
 - Keep delivery state legible through `.symphony/run.json`, `.symphony/checks.json`, `.symphony/observability.json`, and `.symphony/proof.json`.
 
 ## Runtime workflows
@@ -41,5 +47,6 @@ This repo is optimized for agent-first development. Treat this file as a map, no
 - Run `corepack pnpm typecheck`
 - Run `corepack pnpm test`
 - Run `corepack pnpm playwright:smoke` when the web shell or delivery gate changes.
+- Keep `tools/checks/required-checks.mjs` aligned with `WORKFLOW.pr.md` and the required GitHub checks.
 - `corepack pnpm check:delivery` runs the full local validation gate.
 - Update docs or plans when behavior or constraints change

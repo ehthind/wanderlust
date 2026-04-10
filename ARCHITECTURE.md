@@ -46,15 +46,22 @@ Cross-cutting integrations are accessed only through provider interfaces:
 ## Control-plane platform
 - upstream `openai/symphony` Elixir implementation as the orchestrator
 - root `WORKFLOW.md` as the shared policy contract
+- root `WORKFLOW.pr.md` as the PR-repair policy contract
+- `tools/pr-agent` as the GitHub App worker entrypoint for failed required checks
 - `.symphony/*.json` artifacts as the machine-readable run ledger
 
 ## Delivery gates
-- `main` is expected to stay behind protected-branch PR flow.
+- `main` is expected to stay behind PR-first delivery flow.
+- GitHub branch protection should enforce required reviews and checks on `main`.
+- Symphony's `Human Review` -> `Merging` -> `land` loop sits behind those
+  platform gates and performs the final squash merge.
+- The PR repair worker runs before that merge loop and can auto-push fixes, but it never merges or changes review state.
 - Local run hooks should mirror the same validation gates as CI.
 - The repo should be able to stop safely at any of these stages:
   - validated local branch
   - draft PR
-  - ready PR with auto-merge enabled
+  - ready PR awaiting human approval
+  - `Merging` state with Symphony-controlled squash merge in flight
   - merged issue ready for closure
 
 ## Observability split

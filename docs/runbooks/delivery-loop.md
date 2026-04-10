@@ -1,6 +1,6 @@
 # Delivery Loop
 
-This repo is designed for a full autonomous delivery loop with protected-branch gates.
+This repo is designed for a full autonomous delivery loop with PR-first gates.
 
 ## Expected flow
 1. Claim an eligible Linear issue and move it to `In Progress`.
@@ -14,14 +14,41 @@ This repo is designed for a full autonomous delivery loop with protected-branch 
    - `corepack pnpm playwright:smoke`
 5. Commit to the issue branch.
 6. Open or update a draft PR.
-7. Convert the PR to ready once the local validation gate is green.
-8. Enable GitHub auto-merge and let branch protection decide when it lands.
-9. Move the Linear issue to `Done` after merge lands on `main`.
+7. Convert the PR to ready and move the issue to `Human Review` once the local validation gate is green.
+8. After approval, move the issue to `Merging`.
+9. Let the Symphony `land` skill watch checks, resolve drift, and squash-merge into `main`.
+10. Move the Linear issue to `Done` after merge lands on `main`.
+
+## PR repair loop
+- Same-repo PRs can be watched by the GitHub App worker defined by `WORKFLOW.pr.md`.
+- The worker acts only on failed required checks for the latest PR head SHA.
+- The worker keeps one PR comment headed `## Codex CI Workpad` updated as it diagnoses, reruns, or pushes a fix.
+- The worker mirrors the same CI remediation state into the linked Linear issue's `## Codex Workpad` comment under `### CI Remediation` so Symphony and PR repair runs share one ticket timeline.
+- The worker publishes a non-required `codex-remediation` check run so reviewers can see whether repair is active, blocked, or waiting on CI.
+- The worker never merges; `Human Review` and `Merging` remain the handoff points for Symphony's normal land flow.
 
 ## Stop conditions
 - If local validation fails, do not progress to PR readiness.
 - If CI or branch protection fails, leave the issue in `In Progress`.
 - If delivery is blocked, record the blocker in `.symphony/run.json` and `.symphony/proof.json`.
+
+## Current GitHub settings
+- Default branch: `main`
+- Merge method: allow squash merge; disable merge commits and rebase merge
+- Branch cleanup: automatically delete head branches after merge
+- Label: `symphony`
+- Optional sandbox branch: `dev` may exist for human integration work, but Symphony's branch sync and merge target remain `main`
+
+## Platform-enforced settings
+- Pull requests: require a pull request before merging
+- Reviews: require at least one approval before merge
+- Reviews: require conversation resolution before merge
+- Branch freshness: require branches to be up to date before merge
+- Required checks on `main`:
+  - `delivery-gate`
+  - `observability-contract`
+- Informational checks:
+  - `codex-remediation`
 
 ## Required artifacts
 - `.symphony/run.json`
