@@ -9,6 +9,12 @@ import { buildWorkpadBody } from "./workpad.mjs";
 const formatValidation = (results) =>
   results.map((result) => `${result.name}: ${result.status} (${result.durationMs}ms)`);
 
+const replaceProgressAction = (actionsTaken, value) => {
+  const nextActions = actionsTaken.filter((entry) => !entry.startsWith("Progress: "));
+  nextActions.push(`Progress: ${value}`);
+  actionsTaken.splice(0, actionsTaken.length, ...nextActions);
+};
+
 export const buildCodexPrompt = ({ workflowPrompt, pr, failedCheckRuns, excerpts }) =>
   [
     workflowPrompt,
@@ -153,10 +159,19 @@ export const runRepairCycle = async (
     return { status: "awaiting-ci", rerunRequested: true };
   }
 
-  const workspace = await deps.prepareWorkspace();
+  replaceProgressAction(actionsTaken, "preparing workspace");
+  await syncWorkpad("repairing");
+  const workspace = await deps.prepareWorkspace({
+    onProgress: async (step) => {
+      replaceProgressAction(actionsTaken, step);
+      await syncWorkpad("repairing");
+    },
+  });
   actionsTaken.push(`Prepared workspace \`${workspace.workspacePath}\`.`);
   await syncWorkpad("repairing");
 
+  replaceProgressAction(actionsTaken, "running Codex repair");
+  await syncWorkpad("repairing");
   const prompt = buildCodexPrompt({
     workflowPrompt: promptTemplate,
     pr,
@@ -177,6 +192,8 @@ export const runRepairCycle = async (
     diagnosis.push("Codex finished without a final message.");
   }
 
+  replaceProgressAction(actionsTaken, "running local required-check validation");
+  await syncWorkpad("repairing");
   const results = deps.validateRequiredChecks
     ? await deps.validateRequiredChecks({
         workflow,

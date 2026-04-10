@@ -4,36 +4,69 @@ import path from "node:path";
 
 import { getSpawnErrorMessage, spawnShellSync } from "../shared/shell.mjs";
 
-const run = ({ command, args, cwd, env = process.env, allowFailure = false }) => {
+const DEFAULT_TIMEOUTS_MS = Object.freeze({
+  git: 90_000,
+  shell: 15 * 60_000,
+  install: 10 * 60_000,
+  playwright: 5 * 60_000,
+});
+
+const formatFailure = ({ command, args = [], result }) => {
+  const errorMessage = getSpawnErrorMessage(result);
+  const signal = result.signal ? ` signal=${result.signal}` : "";
+  const exitCode = Number.isInteger(result.status) ? ` exit=${result.status}` : "";
+  return `${command}${args.length ? ` ${args.join(" ")}` : ""} failed:${exitCode}${signal}: ${
+    (errorMessage || result.stderr) ?? result.stdout ?? "unknown error"
+  }`;
+};
+
+const run = ({
+  command,
+  args,
+  cwd,
+  env = process.env,
+  allowFailure = false,
+  timeoutMs = DEFAULT_TIMEOUTS_MS.git,
+  label = `${command} ${args.join(" ")}`,
+  onProgress = null,
+}) => {
+  onProgress?.(label);
+  process.stderr.write(`[pr-agent] ${label}\n`);
   const result = spawnSync(command, args, {
     cwd,
     env,
     encoding: "utf8",
+    timeout: timeoutMs,
   });
 
   if (!allowFailure && result.status !== 0) {
-    const errorMessage = getSpawnErrorMessage(result);
-    throw new Error(
-      `${command} ${args.join(" ")} failed: ${(errorMessage || result.stderr) ?? result.stdout ?? "unknown error"}`,
-    );
+    throw new Error(formatFailure({ command, args, result }));
   }
 
   return result;
 };
 
-const runShell = ({ command, cwd, env = process.env, allowFailure = false }) =>
+const runShell = ({
+  command,
+  cwd,
+  env = process.env,
+  allowFailure = false,
+  timeoutMs = DEFAULT_TIMEOUTS_MS.shell,
+  label = command,
+  onProgress = null,
+}) =>
   (() => {
+    onProgress?.(label);
+    process.stderr.write(`[pr-agent] ${label}\n`);
     const result = spawnShellSync(command, {
       cwd,
       env,
       encoding: "utf8",
+      timeout: timeoutMs,
     });
 
     if (!allowFailure && result.status !== 0) {
-      const errorMessage = getSpawnErrorMessage(result);
-      throw new Error(
-        `${command} failed: ${(errorMessage || result.stderr) ?? result.stdout ?? "unknown error"}`,
-      );
+      throw new Error(formatFailure({ command, result }));
     }
 
     return result;
@@ -64,6 +97,7 @@ export const preparePrWorkspace = ({
   token,
   installCommand,
   playwrightInstallCommand,
+  onProgress = null,
   gitUserName = "Wanderlust Codex CI",
   gitUserEmail = "codex-ci@wanderlust.local",
 }) => {
@@ -80,6 +114,8 @@ export const preparePrWorkspace = ({
       command: "git",
       args: ["clone", repositoryUrl, workspacePath],
       cwd: process.cwd(),
+      label: `clone repository into ${workspacePath}`,
+      onProgress,
     });
   }
 
@@ -87,49 +123,65 @@ export const preparePrWorkspace = ({
     command: "git",
     args: ["remote", "set-url", "origin", remoteUrlWithToken(repositoryUrl, token)],
     cwd: workspacePath,
+    label: "set authenticated origin remote",
+    onProgress,
   });
   run({
     command: "git",
     args: ["fetch", "origin", headRef],
     cwd: workspacePath,
+    label: `fetch origin/${headRef}`,
+    onProgress,
   });
   run({
     command: "git",
     args: ["checkout", "-B", `codex-pr-agent/pr-${prNumber}`, `origin/${headRef}`],
     cwd: workspacePath,
+    label: `checkout codex-pr-agent/pr-${prNumber}`,
+    onProgress,
   });
   run({
     command: "git",
     args: ["reset", "--hard", headSha],
     cwd: workspacePath,
+    label: `reset workspace to ${headSha.slice(0, 7)}`,
+    onProgress,
   });
   run({
     command: "git",
     args: ["clean", "-fd"],
     cwd: workspacePath,
+    label: "clean workspace",
+    onProgress,
   });
   run({
     command: "git",
     args: ["config", "user.name", gitUserName],
     cwd: workspacePath,
+    label: "configure git user.name",
+    onProgress,
   });
   run({
     command: "git",
     args: ["config", "user.email", gitUserEmail],
     cwd: workspacePath,
+    label: "configure git user.email",
+    onProgress,
   });
 
   runShell({
-    command: "corepack enable",
-    cwd: workspacePath,
-  });
-  runShell({
     command: installCommand,
     cwd: workspacePath,
+    timeoutMs: DEFAULT_TIMEOUTS_MS.install,
+    label: "install workspace dependencies",
+    onProgress,
   });
   runShell({
     command: playwrightInstallCommand,
     cwd: workspacePath,
+    timeoutMs: DEFAULT_TIMEOUTS_MS.playwright,
+    label: "ensure Playwright browsers are available",
+    onProgress,
   });
 
   return { workspacePath };

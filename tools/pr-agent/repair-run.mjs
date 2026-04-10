@@ -5,16 +5,17 @@ import { writePrAgentArtifacts } from "./artifacts.mjs";
 import { createGitHubAppClient, extractActionsRunIdFromCheckRun } from "./github-app.mjs";
 import { createLinearClientFromWorkflow, syncLinearIssueWorkpad } from "./linear.mjs";
 import { getRequiredCheckStatus } from "./policy.mjs";
+import { reportRepairRunFailure, upsertRepairWorkpad } from "./repair-run-support.mjs";
 import { runCodexRepair, runRepairCycle } from "./repair-runner.mjs";
 import { createStateStore } from "./state-store.mjs";
 import { loadPrWorkflow } from "./workflow.mjs";
-import { findExistingWorkpadComment } from "./workpad.mjs";
 import { commitAndPushChanges, preparePrWorkspace } from "./workspace.mjs";
 
 const args = process.argv.slice(2);
 const contextFlagIndex = args.indexOf("--context");
 const contextPath =
   contextFlagIndex >= 0 && args[contextFlagIndex + 1] ? args[contextFlagIndex + 1] : null;
+let loadedContext = null;
 
 if (!contextPath) {
   process.stderr.write("Usage: node tools/pr-agent/repair-run.mjs --context <path>\n");
@@ -55,23 +56,9 @@ const readCheckContext = async ({ github, checkRun, workflow }) => {
   return snippets;
 };
 
-const upsertWorkpad = async ({ github, workflow, pr, state, body }) => {
-  const comments = await github.listIssueComments(pr.number);
-  const existing =
-    comments.find((comment) => comment.id === state.commentId) ??
-    findExistingWorkpadComment(comments, workflow.config.workpad.marker);
-
-  if (existing) {
-    await github.updateIssueComment(existing.id, body);
-    return existing.id;
-  }
-
-  const created = await github.createIssueComment(pr.number, body);
-  return created.id;
-};
-
 const main = async () => {
   const context = JSON.parse(fs.readFileSync(contextPath, "utf8"));
+  loadedContext = context;
   const workflow = loadPrWorkflow(context.workflowPath);
   const stateStore = createStateStore(workflow.config.state.root);
   const github = createGitHubAppClient({
@@ -182,7 +169,7 @@ const main = async () => {
       },
       {
         ensureWorkpad: async (body) =>
-          upsertWorkpad({
+          upsertRepairWorkpad({
             github,
             workflow,
             pr,
@@ -234,7 +221,7 @@ const main = async () => {
         updateRemediationCheckRun: (checkRunId, patch) => github.updateCheckRun(checkRunId, patch),
         rerequestCheckRun: (checkRunId) => github.rerequestCheckRun(checkRunId),
         updateState,
-        prepareWorkspace: () => {
+        prepareWorkspace: ({ onProgress } = {}) => {
           const workspace = preparePrWorkspace({
             workspaceRoot: workflow.config.workspace.root,
             repositoryUrl: context.repositoryUrl,
@@ -246,6 +233,7 @@ const main = async () => {
             token: process.env.GITHUB_PR_AGENT_TOKEN,
             installCommand: workflow.config.workspace.installCommand,
             playwrightInstallCommand: workflow.config.workspace.playwrightInstallCommand,
+            onProgress,
           });
           workspaceArtifactRoot = workspace.workspacePath;
           return workspace;
@@ -288,7 +276,45 @@ const main = async () => {
   }
 };
 
-main().catch((error) => {
+main().catch(async (error) => {
+  try {
+    if (loadedContext) {
+      const context = loadedContext;
+      const workflow = loadPrWorkflow(context.workflowPath);
+      const stateStore = createStateStore(workflow.config.state.root);
+      const github = createGitHubAppClient({
+        owner: context.owner,
+        repo: context.repo,
+        installationId: context.installationId,
+        token: process.env.GITHUB_PR_AGENT_TOKEN,
+        appId: process.env.GITHUB_APP_ID,
+        privateKey: process.env.GITHUB_APP_PRIVATE_KEY,
+      });
+      const linear = createLinearClientFromWorkflow(workflow.config);
+      const pr = await github.getPullRequest(context.pullRequestNumber);
+
+      await reportRepairRunFailure({
+        github,
+        linear,
+        workflow: workflow.config,
+        stateStore,
+        owner: context.owner,
+        repo: context.repo,
+        pr,
+        runId: context.runId,
+        error,
+      });
+    }
+  } catch (reportError) {
+    process.stderr.write(
+      `Failed to report repair-run failure: ${
+        reportError instanceof Error
+          ? (reportError.stack ?? reportError.message)
+          : String(reportError)
+      }\n`,
+    );
+  }
+
   process.stderr.write(
     `${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`,
   );

@@ -52,7 +52,7 @@
   "workspace": {
     "root": "~/code/wanderlust-workspaces/pr-agent",
     "installCommand": "corepack pnpm install --frozen-lockfile",
-    "playwrightInstallCommand": "npx playwright install --with-deps chromium"
+    "playwrightInstallCommand": "test -d \"${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}\" || npx playwright install chromium"
   },
   "state": {
     "root": "~/.config/wanderlust/pr-agent"

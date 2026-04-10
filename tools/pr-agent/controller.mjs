@@ -15,11 +15,9 @@ const buildDefaultSpawnRepairRun =
       {
         cwd: process.cwd(),
         env,
-        detached: true,
-        stdio: "ignore",
+        stdio: ["ignore", "inherit", "inherit"],
       },
     );
-    child.unref();
     return child;
   };
 
