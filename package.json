@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10.10.0",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "dependencies": {
-    "@temporalio/client": "^1.11.4"
+    "@temporalio/client": "^1.15.0"
   },
   "scripts": {
     "dev": "corepack pnpm supabase:prepare && corepack pnpm temporal:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm -r --parallel --stream --filter @wanderlust/web --filter @wanderlust/temporal-worker dev",
@@ -70,15 +70,15 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@playwright/test": "^1.54.1",
-    "@types/node": "^24.3.0",
-    "glob": "^11.0.3",
+    "@playwright/test": "^1.59.1",
+    "@types/node": "^24.12.2",
+    "glob": "^11.1.0",
     "supabase": "2.87.2",
-    "tsx": "^4.20.3",
-    "turbo": "^2.5.6",
-    "typescript": "^5.9.2",
+    "tsx": "^4.21.0",
+    "turbo": "^2.9.5",
+    "typescript": "^5.9.3",
     "vercel": "^50.41.0",
     "vitest": "^3.2.4",
-    "zod": "^4.1.12"
+    "zod": "^4.3.6"
   }
 }

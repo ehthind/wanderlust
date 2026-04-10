@@ -20,7 +20,7 @@ The Wanderlust PR repair agent is a GitHub App worker that watches same-repo pul
   - `GITHUB_APP_ID` and `GITHUB_APP_PRIVATE_KEY`, or `GITHUB_PR_AGENT_TOKEN`
   - `LINEAR_API_KEY` when CI remediation should also update the linked Linear issue workpad
 - Recommended host tooling:
-  - Node 22+
+  - Node 24+
   - `git`
   - `unzip`
   - Playwright system dependencies
