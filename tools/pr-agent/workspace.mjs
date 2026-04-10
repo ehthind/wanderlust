@@ -78,7 +78,7 @@ export const preparePrWorkspace = ({
   if (!fs.existsSync(path.join(workspacePath, ".git"))) {
     run({
       command: "git",
-      args: ["clone", repositoryUrl, workspacePath],
+      args: ["clone", remoteUrlWithToken(repositoryUrl, token), workspacePath],
       cwd: process.cwd(),
     });
   }
