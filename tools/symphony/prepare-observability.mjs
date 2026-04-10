@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawnShellSync } from "../shared/shell.mjs";
 
 import { getWorkspaceContext, updateRunArtifact, writeArtifact } from "./_shared.mjs";
 
@@ -12,7 +12,7 @@ const endpoints = {
   otlpHttp: `http://127.0.0.1:${ctx.workspace.ports.otlpHttp}`,
 };
 
-const dockerCheck = spawnSync("/bin/zsh", ["-lc", "docker compose version"], {
+const dockerCheck = spawnShellSync("docker compose version", {
   cwd: ctx.repoRoot,
   encoding: "utf8",
 });
@@ -25,12 +25,8 @@ let reason = canUseDocker
 let mode = canUseDocker ? "stack" : "metadata-only";
 
 if (canUseDocker) {
-  const result = spawnSync(
-    "/bin/zsh",
-    [
-      "-lc",
-      `OBSERVABILITY_GRAFANA_PORT=${ctx.workspace.ports.grafana} OBSERVABILITY_OTLP_GRPC_PORT=${ctx.workspace.ports.otlpGrpc} OBSERVABILITY_OTLP_HTTP_PORT=${ctx.workspace.ports.otlpHttp} docker compose -f ops/observability/compose.yml -p ${projectName} up -d`,
-    ],
+  const result = spawnShellSync(
+    `OBSERVABILITY_GRAFANA_PORT=${ctx.workspace.ports.grafana} OBSERVABILITY_OTLP_GRPC_PORT=${ctx.workspace.ports.otlpGrpc} OBSERVABILITY_OTLP_HTTP_PORT=${ctx.workspace.ports.otlpHttp} docker compose -f ops/observability/compose.yml -p ${projectName} up -d`,
     {
       cwd: ctx.repoRoot,
       encoding: "utf8",

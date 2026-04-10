@@ -1,4 +1,6 @@
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
+
+import { spawnShellSync } from "../shared/shell.mjs";
 
 const DEFAULT_BIN = "doppler";
 const DEFAULT_MODE = "doppler";
@@ -44,7 +46,7 @@ const runDopplerSync = (args, source = process.env) => {
     ...args.map(shellEscape),
   ].join(" ");
 
-  return spawnSync("/bin/zsh", ["-lc", command], {
+  return spawnShellSync(command, {
     encoding: "utf8",
     env,
   });

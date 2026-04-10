@@ -4,6 +4,8 @@ Symphony is an orchestration layer for isolated implementation runs. It is not p
 
 ## What this repo provides
 - root `WORKFLOW.md`
+- repo-local Codex delivery skills under `.codex/skills/`
+- repo-local PR template under `.github/pull_request_template.md`
 - workspace bootstrap hooks for cloned issue workspaces
 - lifecycle hooks under `tools/symphony`
 - proof-of-work collection hooks
@@ -28,14 +30,16 @@ Wanderlust keeps only the repo-local policy and bootstrap layer:
 
 The product runtime remains in TypeScript.
 
-## Cost-control defaults
-The repo uses conservative defaults intended to fit a ChatGPT Pro workflow:
-- `max_concurrent_agents: 1`
-- `max_turns: 8`
-- `allow_subagents: false`
-- `codex.model: gpt-5.1-codex-mini`
+## Workflow alignment
+The root `WORKFLOW.md` now stays close to the upstream `openai/symphony` reference workflow:
+- upstream-style Linear status flow: `Todo`, `In Progress`, `Human Review`, `Merging`, `Rework`, `Done`
+- upstream agent defaults: `max_concurrent_agents: 10` and `max_turns: 20`
+- upstream Codex launch posture: `gpt-5.3-codex`, `xhigh` reasoning, `approval_policy: never`, and `workspaceWrite` turn sandboxing
 
-The workflow config keeps the upstream operator on a single active issue at a time by default.
+Repo-specific differences remain only where Wanderlust needs local policy or bootstrap behavior:
+- `tracker.project_slug` points at the Wanderlust Linear project
+- `workspace.root` stays under `~/code/wanderlust-workspaces`
+- repo-local lifecycle hooks still prepare the workspace, observability, and proof artifacts
 
 ## Workspace model
 The current workflow uses upstream Symphony's default workspace model:
@@ -53,11 +57,24 @@ The upstream Symphony service is expected to drive the full delivery loop for th
 - create or update issue branches
 - prepare commits
 - open or update GitHub pull requests
-- enable auto-merge
+- move approved issues into `Merging`
+- watch required GitHub checks
+- squash-merge the PR through the `land` skill
 - monitor merge completion
-- mark Linear work `Done` after the protected branch merge lands
+- mark Linear work `Done` after the squash merge lands on `main`
 
 Repo-local docs and hooks define the policy; upstream Symphony remains the scheduler.
+
+## Adjacent PR repair worker
+Wanderlust now carries a separate GitHub App worker for failed required PR checks:
+- `WORKFLOW.pr.md` defines the PR-remediation contract
+- `tools/pr-agent/*` implements the webhook server, state store, repair runner, and workspace loop
+- `tools/checks/required-checks.mjs` is the shared source of truth for required check names and commands
+
+This worker is adjacent to Symphony, not a replacement for it:
+- it acts only on same-repo pull requests
+- it can diagnose, rerun, and push fixes
+- it does not move review state or merge the PR
 
 ## Secrets model
 Symphony itself is not responsible for injecting secrets into the workspace environment. Wanderlust uses Doppler service-token runtime fetches instead:

@@ -1,15 +1,16 @@
-import { getWorkspaceContext, runCommand, updateRunArtifact, writeArtifact } from "./_shared.mjs";
+import { listRequiredChecks, runRequiredCheck } from "../checks/required-checks.mjs";
+import { getWorkspaceContext, updateRunArtifact, writeArtifact } from "./_shared.mjs";
 
 const ctx = getWorkspaceContext();
-const commands = [
-  { name: "lint", command: "corepack pnpm lint" },
-  { name: "typecheck", command: "corepack pnpm typecheck" },
-  { name: "check", command: "corepack pnpm check" },
-  { name: "test", command: "corepack pnpm test" },
-  { name: "playwright-smoke", command: "corepack pnpm playwright:smoke" },
-];
-
-const results = commands.map(({ name, command }) => runCommand(ctx, name, command));
+const commands = listRequiredChecks();
+const results = commands.map(({ name }) =>
+  runRequiredCheck({
+    repoRoot: ctx.repoRoot,
+    checkName: name,
+    surface: "workspace",
+    appendStepSummary: false,
+  }),
+);
 const passed = results.every((result) => result.status === "passed");
 
 writeArtifact(ctx, "checks.json", {
