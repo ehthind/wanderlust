@@ -35,7 +35,7 @@ Keep Railway as the default hosted worker target without making it part of the c
 - `POSTHOG_KEY`
 
 ## PR agent runtime env
-- `RAILWAY_DOCKERFILE_PATH=tools/pr-agent/Dockerfile`
+- `RAILWAY_DOCKERFILE_PATH=Dockerfile.pr-agent`
 - `PR_AGENT_WEBHOOK_PATH=/github/webhook`
 - `GITHUB_WEBHOOK_SECRET`
 - `GITHUB_PR_AGENT_TOKEN` or GitHub App credentials

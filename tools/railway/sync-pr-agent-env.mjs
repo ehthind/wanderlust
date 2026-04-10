@@ -27,7 +27,7 @@ const webhookSecret =
   process.env.GITHUB_WEBHOOK_SECRET ?? crypto.randomBytes(24).toString("hex");
 
 const entries = [
-  ["RAILWAY_DOCKERFILE_PATH", "tools/pr-agent/Dockerfile"],
+  ["RAILWAY_DOCKERFILE_PATH", "Dockerfile.pr-agent"],
   ["PR_AGENT_WEBHOOK_PATH", "/github/webhook"],
   ["GITHUB_PR_AGENT_TOKEN", resolveGitHubToken()],
   ["GITHUB_WEBHOOK_SECRET", webhookSecret],
