@@ -1,6 +1,7 @@
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+
+import { getSpawnErrorMessage, spawnShellSync } from "../shared/shell.mjs";
 
 const SURFACE_DIRS = {
   ci: ".ci-artifacts",
@@ -68,6 +69,7 @@ export const runRequiredCheck = ({
   surface = "ci",
   env = process.env,
   appendStepSummary = true,
+  spawn = spawnShellSync,
 }) => {
   const check = getRequiredCheck(checkName);
   const startedAt = Date.now();
@@ -75,7 +77,7 @@ export const runRequiredCheck = ({
 
   fs.mkdirSync(artifactPaths.artifactDir, { recursive: true });
 
-  const child = spawnSync("/bin/zsh", ["-lc", check.command], {
+  const child = spawn(check.command, {
     cwd: repoRoot,
     env,
     encoding: "utf8",
@@ -83,6 +85,7 @@ export const runRequiredCheck = ({
 
   const stdout = child.stdout ?? "";
   const stderr = child.stderr ?? "";
+  const spawnError = getSpawnErrorMessage(child);
 
   if (stdout) {
     process.stdout.write(stdout);
@@ -92,18 +95,26 @@ export const runRequiredCheck = ({
     process.stderr.write(stderr);
   }
 
-  fs.writeFileSync(artifactPaths.logPath, `${stdout}${stderr}`);
+  if (spawnError) {
+    process.stderr.write(`${spawnError}\n`);
+  }
+
+  fs.writeFileSync(
+    artifactPaths.logPath,
+    `${stdout}${stderr}${spawnError ? `${spawnError}\n` : ""}`,
+  );
 
   const result = {
     name: check.name,
     command: check.command,
     description: check.description,
-    status: child.status === 0 ? "passed" : "failed",
+    status: child.status === 0 && !spawnError ? "passed" : "failed",
     exitCode: child.status ?? 1,
     durationMs: Date.now() - startedAt,
     logPath: artifactPaths.logPath,
     resultPath: artifactPaths.resultPath,
     summaryPath: artifactPaths.summaryPath,
+    spawnError: spawnError || null,
   };
 
   fs.writeFileSync(artifactPaths.resultPath, `${JSON.stringify(result, null, 2)}\n`);

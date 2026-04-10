@@ -2,6 +2,8 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import { getSpawnErrorMessage, spawnShellSync } from "../shared/shell.mjs";
+
 const run = ({ command, args, cwd, env = process.env, allowFailure = false }) => {
   const result = spawnSync(command, args, {
     cwd,
@@ -10,8 +12,9 @@ const run = ({ command, args, cwd, env = process.env, allowFailure = false }) =>
   });
 
   if (!allowFailure && result.status !== 0) {
+    const errorMessage = getSpawnErrorMessage(result);
     throw new Error(
-      `${command} ${args.join(" ")} failed: ${result.stderr ?? result.stdout ?? "unknown error"}`,
+      `${command} ${args.join(" ")} failed: ${(errorMessage || result.stderr) ?? result.stdout ?? "unknown error"}`,
     );
   }
 
@@ -19,13 +22,22 @@ const run = ({ command, args, cwd, env = process.env, allowFailure = false }) =>
 };
 
 const runShell = ({ command, cwd, env = process.env, allowFailure = false }) =>
-  run({
-    command: "/bin/zsh",
-    args: ["-lc", command],
-    cwd,
-    env,
-    allowFailure,
-  });
+  (() => {
+    const result = spawnShellSync(command, {
+      cwd,
+      env,
+      encoding: "utf8",
+    });
+
+    if (!allowFailure && result.status !== 0) {
+      const errorMessage = getSpawnErrorMessage(result);
+      throw new Error(
+        `${command} failed: ${(errorMessage || result.stderr) ?? result.stdout ?? "unknown error"}`,
+      );
+    }
+
+    return result;
+  })();
 
 const remoteUrlWithToken = (repositoryUrl, token) => {
   if (!token || !repositoryUrl.startsWith("https://")) {

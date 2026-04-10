@@ -1,6 +1,7 @@
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+
+import { spawnShellSync } from "../shared/shell.mjs";
 
 const markerPath = path.join(process.cwd(), ".symphony-ready.json");
 
@@ -13,12 +14,8 @@ const observabilityPath = path.join(process.cwd(), ".symphony", "observability.j
 if (fs.existsSync(observabilityPath)) {
   const observability = JSON.parse(fs.readFileSync(observabilityPath, "utf8"));
   if (observability.local?.status === "started") {
-    const result = spawnSync(
-      "/bin/zsh",
-      [
-        "-lc",
-        `docker compose -f ops/observability/compose.yml -p ${observability.local.projectName} down -v`,
-      ],
+    const result = spawnShellSync(
+      `docker compose -f ops/observability/compose.yml -p ${observability.local.projectName} down -v`,
       {
         cwd: process.cwd(),
         encoding: "utf8",

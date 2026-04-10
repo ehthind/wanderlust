@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { getManagedSinkStatusSync } from "../doppler/secrets.mjs";
+import { getSpawnErrorMessage, spawnShellSync } from "../shared/shell.mjs";
 
 const issueIdentifierFromWorkspace = (workspaceRoot) => path.basename(workspaceRoot);
 
@@ -173,7 +174,7 @@ export const runCommand = (ctx, name, command) => {
   const startedAt = Date.now();
   const logFileName = `${name}.log`;
   const logPath = artifactPath(ctx, logFileName);
-  const result = spawnSync("/bin/zsh", ["-lc", command], {
+  const result = spawnShellSync(command, {
     cwd: ctx.repoRoot,
     encoding: "utf8",
     env: process.env,
@@ -181,14 +182,16 @@ export const runCommand = (ctx, name, command) => {
 
   const stdout = result.stdout ?? "";
   const stderr = result.stderr ?? "";
-  fs.writeFileSync(logPath, `${stdout}${stderr}`);
+  const spawnError = getSpawnErrorMessage(result);
+  fs.writeFileSync(logPath, `${stdout}${stderr}${spawnError ? `${spawnError}\n` : ""}`);
 
   return {
     name,
     command,
-    status: result.status === 0 ? "passed" : "failed",
+    status: result.status === 0 && !spawnError ? "passed" : "failed",
     exitCode: result.status ?? 1,
     durationMs: Date.now() - startedAt,
     logPath,
+    spawnError: spawnError || null,
   };
 };

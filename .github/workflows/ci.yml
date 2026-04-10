@@ -40,6 +40,7 @@ jobs:
         with:
           name: required-check-delivery-gate
           path: .ci-artifacts/delivery-gate.*
+          include-hidden-files: true
           if-no-files-found: error
 
   observability-contract:
@@ -66,4 +67,5 @@ jobs:
         with:
           name: required-check-observability-contract
           path: .ci-artifacts/observability-contract.*
+          include-hidden-files: true
           if-no-files-found: error
