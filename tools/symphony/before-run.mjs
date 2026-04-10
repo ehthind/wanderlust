@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import { listRequiredChecks } from "../checks/required-checks.mjs";
 import { assertDopplerReadySync } from "../doppler/secrets.mjs";
 import {
   ensureSymphonyDir,
@@ -43,13 +44,7 @@ updateRunArtifact(ctx, {
 
 writeArtifact(ctx, "checks.json", {
   generatedAt: new Date().toISOString(),
-  required: [
-    "corepack pnpm lint",
-    "corepack pnpm typecheck",
-    "corepack pnpm check",
-    "corepack pnpm test",
-    "corepack pnpm playwright:smoke",
-  ],
+  required: listRequiredChecks().map(({ command }) => command),
   results: [],
   passed: false,
 });

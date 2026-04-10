@@ -5,21 +5,57 @@ on:
   push:
     branches:
       - main
+      - dev
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  validate:
+  delivery-gate:
+    name: delivery-gate
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: pnpm
       - run: corepack enable
       - run: corepack pnpm install --frozen-lockfile
-      - run: corepack pnpm lint
-      - run: corepack pnpm typecheck
-      - run: corepack pnpm check
-      - run: corepack pnpm check:observability
-      - run: corepack pnpm test
       - run: npx playwright install --with-deps chromium
-      - run: corepack pnpm playwright:smoke
+      - name: Run delivery-gate
+        run: corepack pnpm ci:required-check:delivery-gate
+      - name: Upload delivery-gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: required-check-delivery-gate
+          path: .ci-artifacts/delivery-gate.*
+          if-no-files-found: error
+
+  observability-contract:
+    name: observability-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: corepack enable
+      - run: corepack pnpm install --frozen-lockfile
+      - name: Run observability-contract
+        run: corepack pnpm ci:required-check:observability-contract
+      - name: Upload observability-contract artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: required-check-observability-contract
+          path: .ci-artifacts/observability-contract.*
+          if-no-files-found: error
