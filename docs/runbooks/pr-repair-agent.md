@@ -40,6 +40,11 @@ The Wanderlust PR repair agent is a GitHub App worker that watches same-repo pul
 - Reuses `.symphony/run.json`, `.symphony/checks.json`, `.symphony/observability.json`, and `.symphony/proof.json` inside the isolated repair workspace.
 - Supports `@codex retry` and `@codex stop` PR comments.
 
+## Watching a remediation run
+- Look for the `codex-remediation` check in the PR header to confirm the worker has claimed the failure.
+- Open the `## Codex CI Workpad` comment on the PR to watch diagnosis, fix attempts, reruns, and blocker status.
+- When the PR metadata resolves to a Linear issue, check the issue's `## Codex Workpad` comment for the mirrored `### CI Remediation` status.
+
 ## Guardrails
 - Ignores forked PRs in v1.
 - Stops after the configured repeated-failure budget.
