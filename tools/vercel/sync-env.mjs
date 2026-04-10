@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { downloadSecretsSync } from "../doppler/secrets.mjs";
+import { getVercelTargetEntries } from "../runtime/hosted-env.mjs";
 import { codeRoot, repoRoot, runVercelSync } from "./_shared.mjs";
 
 const [, , target] = process.argv;
@@ -10,24 +11,6 @@ const targetToDopplerConfig = {
   development: "dev",
   preview: "dev",
   production: "prd",
-};
-
-const targetToEntries = {
-  development: [
-    ["APP_NAME", "Wanderlust", false],
-    ["SERVICE_NAME", "wanderlust", false],
-    ["WANDERLUST_SECRETS_MODE", "env", false],
-  ],
-  preview: [
-    ["APP_NAME", "Wanderlust", false],
-    ["SERVICE_NAME", "wanderlust", false],
-    ["WANDERLUST_SECRETS_MODE", "env", false],
-  ],
-  production: [
-    ["APP_NAME", "Wanderlust", false],
-    ["SERVICE_NAME", "wanderlust", false],
-    ["WANDERLUST_SECRETS_MODE", "env", false],
-  ],
 };
 
 if (!target || !Object.hasOwn(targetToDopplerConfig, target)) {
@@ -61,7 +44,7 @@ const secretEntries = [
   .map((name) => [name, secrets[name], true])
   .filter(([, value]) => typeof value === "string" && value.length > 0);
 
-const entries = [...targetToEntries[target], ...secretEntries];
+const entries = [...getVercelTargetEntries(), ...secretEntries];
 
 const readLinkedProjectId = () => {
   if (!fs.existsSync(vercelProjectFile)) {

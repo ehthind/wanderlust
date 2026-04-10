@@ -36,7 +36,7 @@ export const getDopplerBin = (source = process.env) => source.DOPPLER_BIN ?? DEF
 const shellEscape = (value) => `'${String(value).replace(/'/g, `'\\''`)}'`;
 
 const runDopplerSync = (args, source = process.env) => {
-  const env = { ...source };
+  const { DOPPLER_SCOPE: _ignoredScope, ...env } = source;
   const scope = source.DOPPLER_SCOPE ?? process.cwd();
   const command = [
     "cd",
@@ -45,8 +45,6 @@ const runDopplerSync = (args, source = process.env) => {
     shellEscape(getDopplerBin(source)),
     ...args.map(shellEscape),
   ].join(" ");
-
-  env.DOPPLER_SCOPE = undefined;
 
   return spawnShellSync(command, {
     encoding: "utf8",

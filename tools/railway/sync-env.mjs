@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 
 import { downloadSecretsSync } from "../doppler/secrets.mjs";
+import { getRailwayBaseEntries } from "../runtime/hosted-env.mjs";
 
 const [, , label] = process.argv;
 
@@ -13,6 +14,7 @@ const service = process.env.RAILWAY_SERVICE ?? "temporal-worker";
 const environment = process.env.RAILWAY_ENVIRONMENT ?? label;
 const secrets = downloadSecretsSync(process.env);
 const entries = [
+  ...getRailwayBaseEntries(),
   ["TEMPORAL_ADDRESS", secrets.TEMPORAL_ADDRESS],
   ["TEMPORAL_NAMESPACE", secrets.TEMPORAL_NAMESPACE],
   ["TEMPORAL_TASK_QUEUE", secrets.TEMPORAL_TASK_QUEUE],
