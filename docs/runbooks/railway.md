@@ -35,10 +35,11 @@ Keep Railway as the default hosted worker target without making it part of the c
 - `POSTHOG_KEY`
 
 ## PR agent runtime env
-- `NIXPACKS_APT_PKGS=git,unzip`
-- `NIXPACKS_INSTALL_CMD=corepack pnpm install --frozen-lockfile && npm install -g @openai/codex@0.118.0`
-- `NIXPACKS_BUILD_CMD=npx playwright install --with-deps chromium`
-- `NIXPACKS_START_CMD=node tools/pr-agent/start.mjs`
+- `RAILPACK_BUILD_APT_PACKAGES="git unzip"`
+- `RAILPACK_DEPLOY_APT_PACKAGES="git unzip"`
+- `RAILPACK_INSTALL_CMD=corepack pnpm install --frozen-lockfile && npm install -g @openai/codex@0.118.0`
+- `RAILPACK_BUILD_CMD=npx playwright install --with-deps chromium`
+- `RAILPACK_START_CMD=node tools/pr-agent/start.mjs`
 - `PR_AGENT_WEBHOOK_PATH=/github/webhook`
 - `GITHUB_WEBHOOK_SECRET`
 - `GITHUB_PR_AGENT_TOKEN` or GitHub App credentials

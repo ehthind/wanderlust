@@ -27,13 +27,14 @@ const webhookSecret =
   process.env.GITHUB_WEBHOOK_SECRET ?? crypto.randomBytes(24).toString("hex");
 
 const entries = [
-  ["NIXPACKS_APT_PKGS", "git,unzip"],
+  ["RAILPACK_BUILD_APT_PACKAGES", "git unzip"],
+  ["RAILPACK_DEPLOY_APT_PACKAGES", "git unzip"],
   [
-    "NIXPACKS_INSTALL_CMD",
+    "RAILPACK_INSTALL_CMD",
     "corepack pnpm install --frozen-lockfile && npm install -g @openai/codex@0.118.0",
   ],
-  ["NIXPACKS_BUILD_CMD", "npx playwright install --with-deps chromium"],
-  ["NIXPACKS_START_CMD", "node tools/pr-agent/start.mjs"],
+  ["RAILPACK_BUILD_CMD", "npx playwright install --with-deps chromium"],
+  ["RAILPACK_START_CMD", "node tools/pr-agent/start.mjs"],
   ["PR_AGENT_WEBHOOK_PATH", "/github/webhook"],
   ["GITHUB_PR_AGENT_TOKEN", resolveGitHubToken()],
   ["GITHUB_WEBHOOK_SECRET", webhookSecret],
