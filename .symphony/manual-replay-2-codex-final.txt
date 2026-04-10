@@ -1,0 +1,13 @@
+**Diagnosis**
+- `observability-contract` failed because `tools/checks/observability.mjs` requires `ops/observability/README.md`, and that file was missing.
+
+**Files Changed**
+- Added [ops/observability/README.md](/tmp/wanderlust-pr-agent-workspaces-replay2/ehthind__wanderlust/pr-4/ops/observability/README.md).
+
+**Validation Result**
+- Ran `corepack pnpm check:observability`.
+- Result: pass (`observability checks passed`).
+
+**Blocker**
+- No Linear issue identifier was resolvable from PR branch/title/body, so no `## Codex Workpad` / `### CI Remediation` mirror update could be applied.
+- Commit/push could not be completed in this environment: `fatal: Unable to create '.git/index.lock': Operation not permitted`.
