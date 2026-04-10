@@ -79,12 +79,8 @@ const rewriteAliases = async (filePath) => {
 
       if (target) {
         const absoluteTarget = resolve(distRoot, target);
-        const relativeTarget = relative(dirname(filePath), absoluteTarget)
-          .split("\\")
-          .join("/");
-        const normalized = relativeTarget.startsWith(".")
-          ? relativeTarget
-          : `./${relativeTarget}`;
+        const relativeTarget = relative(dirname(filePath), absoluteTarget).split("\\").join("/");
+        const normalized = relativeTarget.startsWith(".") ? relativeTarget : `./${relativeTarget}`;
 
         return `${quote}${normalized}${quote}`;
       }

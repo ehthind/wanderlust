@@ -3,6 +3,8 @@ import type { PlanTripWorkflowInput } from "@wanderlust/providers/workflow";
 import { createLogger } from "@wanderlust/shared-logging";
 import { buildMetricEvent, buildObservabilityLabels } from "@wanderlust/shared-observability";
 
+import { type WorkflowFailureCapture, captureTerminalWorkflowFailure } from "../sentry.js";
+
 const logger = createLogger("temporal.activities.plan-trip", {
   includeTrace: true,
 });
@@ -50,20 +52,26 @@ export const completePlanTrip = async ({
 
 export const failPlanTrip = async ({
   tripDraftId,
-  message,
+  failure,
 }: {
   tripDraftId: string;
-  message: string;
+  failure: WorkflowFailureCapture;
 }) => {
+  captureTerminalWorkflowFailure(failure);
+
   const tripDraft = await updateTripWorkspace(tripDraftId, {
     status: "failed",
     workflowStatus: "failed",
-    planSummary: message,
+    planSummary: failure.message,
   });
 
   logger.error("Plan trip activity failed", {
     tripDraftId,
-    message,
+    workflowId: failure.workflowId,
+    runId: failure.runId,
+    workflow: failure.workflow,
+    activity: failure.activity,
+    message: failure.message,
     labels: buildObservabilityLabels(),
     metric: buildMetricEvent("temporal.activity.plan_trip_failed", 1, "count"),
   });
