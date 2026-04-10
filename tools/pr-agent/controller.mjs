@@ -327,6 +327,13 @@ export const createController = ({
           repositoryUrl: pr.head.repo.clone_url,
         });
         const authToken = await github.getAuthToken();
+        nextState = {
+          ...nextState,
+          activeRunId: runId,
+          activeProcessId: null,
+          blockedReason: null,
+        };
+        stateStore.savePrState(nextState);
         const child = await spawnRepairRun({
           contextPath,
           env: {
@@ -337,9 +344,7 @@ export const createController = ({
 
         nextState = {
           ...nextState,
-          activeRunId: runId,
           activeProcessId: child.pid ?? null,
-          blockedReason: null,
         };
         break;
       }

@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 
 const DEFAULT_API_BASE_URL = "https://api.github.com";
+const SYNTHETIC_STATUS_PREFIX = "status:";
 
 const base64UrlEncode = (value) =>
   Buffer.from(value)
@@ -29,6 +30,59 @@ const parseResponseBody = async (response) => {
     return text;
   }
 };
+
+const isGitHubAppCheckRunAuthError = (error) =>
+  error instanceof Error && error.message.includes("You must authenticate via a GitHub App.");
+
+const encodeSyntheticStatusId = ({ headSha, context }) =>
+  `${SYNTHETIC_STATUS_PREFIX}${headSha}:${encodeURIComponent(context)}`;
+
+const decodeSyntheticStatusId = (value) => {
+  if (typeof value !== "string" || !value.startsWith(SYNTHETIC_STATUS_PREFIX)) {
+    return null;
+  }
+
+  const remainder = value.slice(SYNTHETIC_STATUS_PREFIX.length);
+  const separatorIndex = remainder.indexOf(":");
+  if (separatorIndex < 0) {
+    return null;
+  }
+
+  const headSha = remainder.slice(0, separatorIndex);
+  const encodedContext = remainder.slice(separatorIndex + 1);
+  if (!headSha || !encodedContext) {
+    return null;
+  }
+
+  return {
+    headSha,
+    context: decodeURIComponent(encodedContext),
+  };
+};
+
+const toCommitStatusState = ({ status, conclusion }) => {
+  if (status && status !== "completed") {
+    return "pending";
+  }
+
+  switch (conclusion) {
+    case "success":
+      return "success";
+    case "failure":
+    case "cancelled":
+    case "timed_out":
+    case "action_required":
+    case "startup_failure":
+      return "failure";
+    default:
+      return "error";
+  }
+};
+
+const toCommitStatusDescription = (output = {}) =>
+  String(output.summary ?? output.title ?? "Codex remediation update")
+    .replace(/\s+/g, " ")
+    .slice(0, 140);
 
 export const buildGitHubAppJwt = ({ appId, privateKey, nowMs = Date.now() }) => {
   const issuedAt = Math.floor(nowMs / 1000) - 60;
@@ -77,6 +131,7 @@ export const createGitHubAppClient = ({
   appId,
   privateKey,
   apiBaseUrl = DEFAULT_API_BASE_URL,
+  fetchImpl = fetch,
 }) => {
   let cachedToken = token ?? null;
   let cachedTokenExpiresAt = token ? Date.now() + 30 * 60 * 1000 : 0;
@@ -93,7 +148,7 @@ export const createGitHubAppClient = ({
     }
 
     const appJwt = buildGitHubAppJwt({ appId, privateKey });
-    const tokenResponse = await fetch(
+    const tokenResponse = await fetchImpl(
       buildApiUrl(apiBaseUrl, `/app/installations/${installationId}/access_tokens`),
       {
         method: "POST",
@@ -133,7 +188,7 @@ export const createGitHubAppClient = ({
       headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(buildApiUrl(apiBaseUrl, pathname), {
+    const response = await fetchImpl(buildApiUrl(apiBaseUrl, pathname), {
       method,
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
@@ -158,6 +213,16 @@ export const createGitHubAppClient = ({
     return body;
   };
 
+  const createCommitStatus = ({ headSha, context, status, conclusion, output, targetUrl }) =>
+    request("POST", `/repos/${owner}/${repo}/statuses/${headSha}`, {
+      body: {
+        state: toCommitStatusState({ status, conclusion }),
+        context,
+        description: toCommitStatusDescription(output),
+        ...(targetUrl ? { target_url: targetUrl } : {}),
+      },
+    });
+
   return {
     owner,
     repo,
@@ -174,10 +239,57 @@ export const createGitHubAppClient = ({
       request("PATCH", `/repos/${owner}/${repo}/issues/comments/${commentId}`, { body: { body } }),
     listCheckRunsForRef: (ref) =>
       request("GET", `/repos/${owner}/${repo}/commits/${ref}/check-runs?per_page=100`),
-    createCheckRun: (payload) =>
-      request("POST", `/repos/${owner}/${repo}/check-runs`, { body: payload }),
-    updateCheckRun: (checkRunId, payload) =>
-      request("PATCH", `/repos/${owner}/${repo}/check-runs/${checkRunId}`, { body: payload }),
+    createCheckRun: async (payload) => {
+      try {
+        return await request("POST", `/repos/${owner}/${repo}/check-runs`, { body: payload });
+      } catch (error) {
+        if (!isGitHubAppCheckRunAuthError(error)) {
+          throw error;
+        }
+
+        await createCommitStatus({
+          headSha: payload.head_sha,
+          context: payload.name,
+          status: payload.status,
+          conclusion: payload.conclusion,
+          output: payload.output,
+          targetUrl: payload.details_url,
+        });
+        return {
+          id: encodeSyntheticStatusId({
+            headSha: payload.head_sha,
+            context: payload.name,
+          }),
+        };
+      }
+    },
+    updateCheckRun: async (checkRunId, payload) => {
+      const syntheticStatus = decodeSyntheticStatusId(checkRunId);
+      if (syntheticStatus) {
+        return createCommitStatus({
+          headSha: syntheticStatus.headSha,
+          context: syntheticStatus.context,
+          status: payload.status,
+          conclusion: payload.conclusion,
+          output: payload.output,
+          targetUrl: payload.details_url,
+        });
+      }
+
+      try {
+        return await request("PATCH", `/repos/${owner}/${repo}/check-runs/${checkRunId}`, {
+          body: payload,
+        });
+      } catch (error) {
+        if (!isGitHubAppCheckRunAuthError(error)) {
+          throw error;
+        }
+
+        throw new Error(
+          "Unable to update codex-remediation without GitHub App credentials because the existing status handle cannot be mapped back to a commit SHA.",
+        );
+      }
+    },
     rerequestCheckRun: (checkRunId) =>
       request("POST", `/repos/${owner}/${repo}/check-runs/${checkRunId}/rerequest`, { body: {} }),
     listWorkflowRunArtifacts: (runId) =>

@@ -271,12 +271,10 @@ export const runRepairCycle = async (
   };
 };
 
-export const runCodexRepair = ({ workspacePath, prompt, runId, workflow }) => {
-  const symphonyDir = path.join(workspacePath, ".symphony");
-  fs.mkdirSync(symphonyDir, { recursive: true });
-  const finalMessagePath = path.join(symphonyDir, `${runId}-codex-final.txt`);
-  const codexLogPath = path.join(symphonyDir, `${runId}-codex.log`);
+export const buildCodexExecArgs = ({ workspacePath, runId, workflow, finalMessagePath }) => {
   const args = [
+    "--ask-for-approval",
+    workflow.codex.approvalPolicy,
     ...workflow.codex.command.slice(1),
     "--cd",
     workspacePath,
@@ -284,8 +282,6 @@ export const runCodexRepair = ({ workspacePath, prompt, runId, workflow }) => {
     workflow.codex.model,
     "--sandbox",
     workflow.codex.sandbox,
-    "--ask-for-approval",
-    workflow.codex.approvalPolicy,
     "--output-last-message",
     finalMessagePath,
     ...workflow.codex.extraArgs,
@@ -294,6 +290,21 @@ export const runCodexRepair = ({ workspacePath, prompt, runId, workflow }) => {
   for (const configValue of workflow.codex.config) {
     args.push("--config", configValue);
   }
+
+  return args;
+};
+
+export const runCodexRepair = ({ workspacePath, prompt, runId, workflow }) => {
+  const symphonyDir = path.join(workspacePath, ".symphony");
+  fs.mkdirSync(symphonyDir, { recursive: true });
+  const finalMessagePath = path.join(symphonyDir, `${runId}-codex-final.txt`);
+  const codexLogPath = path.join(symphonyDir, `${runId}-codex.log`);
+  const args = buildCodexExecArgs({
+    workspacePath,
+    runId,
+    workflow,
+    finalMessagePath,
+  });
 
   const result = spawnSync(workflow.codex.command[0], args, {
     cwd: workspacePath,

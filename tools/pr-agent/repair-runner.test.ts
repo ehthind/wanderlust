@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { runRepairCycle } from "./repair-runner.mjs";
+import { buildCodexExecArgs, runRepairCycle } from "./repair-runner.mjs";
 
 const workflow = {
   checks: {
@@ -14,6 +14,14 @@ const workflow = {
   },
   limits: {
     maxAttempts: 3,
+  },
+  codex: {
+    command: ["codex", "exec"],
+    model: "gpt-5.3-codex",
+    approvalPolicy: "never",
+    sandbox: "workspace-write",
+    config: ['model_reasoning_effort="xhigh"'],
+    extraArgs: ["--skip-git-repo-check"],
   },
 };
 
@@ -58,6 +66,19 @@ const buildDeps = () => ({
 });
 
 describe("runRepairCycle", () => {
+  it("places the approval flag before the exec subcommand for current Codex CLI versions", () => {
+    const args = buildCodexExecArgs({
+      workspacePath: "/tmp/workspace",
+      runId: "run-1",
+      workflow,
+      finalMessagePath: "/tmp/final.txt",
+    });
+
+    expect(args.slice(0, 3)).toEqual(["--ask-for-approval", "never", "exec"]);
+    expect(args).toContain("--skip-git-repo-check");
+    expect(args).toContain("/tmp/final.txt");
+  });
+
   it("marks manual-only failures as blocked without preparing a workspace", async () => {
     const deps = buildDeps();
     const outcome = await runRepairCycle(

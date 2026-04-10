@@ -55,6 +55,94 @@ const buildPullRequest = () => ({
 });
 
 describe("createController", () => {
+  it("persists the active run before spawning the repair worker", async () => {
+    let savedState = null;
+    const savePrState = vi.fn((state) => {
+      savedState = state;
+      return state;
+    });
+    const stateStore = {
+      loadPrState: vi.fn(() => savedState),
+      savePrState,
+      writeRunContext: vi.fn(() => "/tmp/context.json"),
+    };
+    const github = {
+      getAuthToken: vi.fn(async () => "token"),
+      getPullRequest: vi.fn(async () => buildPullRequest()),
+      listCheckRunsForRef: vi.fn(async () => ({
+        check_runs: [
+          {
+            id: 11,
+            name: "delivery-gate",
+            status: "completed",
+            conclusion: "success",
+          },
+          {
+            id: 12,
+            name: "observability-contract",
+            status: "completed",
+            conclusion: "failure",
+            output: {
+              summary: "missing README",
+            },
+          },
+        ],
+      })),
+      listIssueComments: vi.fn(async () => []),
+      createIssueComment: vi.fn(async () => ({ id: 101 })),
+      updateIssueComment: vi.fn(async () => ({ id: 101 })),
+      createCheckRun: vi.fn(async () => ({ id: 201 })),
+      updateCheckRun: vi.fn(async () => ({ id: 201 })),
+      rerequestCheckRun: vi.fn(async () => true),
+    };
+    const spawnRepairRun = vi.fn(async () => ({ pid: 4321 }));
+
+    const controller = createController({
+      workflow: {
+        ...workflow,
+        config: {
+          ...workflow.config,
+          github: {
+            ...workflow.config.github,
+            optOutLabel: "skip-this",
+          },
+        },
+      },
+      stateStore,
+      githubClientFactory: vi.fn(() => github),
+      linearClientFactory: vi.fn(() => null),
+      spawnRepairRun,
+      logger: {
+        info: vi.fn(),
+        warn: vi.fn(),
+      },
+    });
+
+    const pr = {
+      ...buildPullRequest(),
+      labels: [],
+    };
+
+    await controller.handleWebhookEvent({
+      eventName: "pull_request",
+      payload: {
+        installation: { id: 1 },
+        pull_request: pr,
+      },
+    });
+
+    expect(savePrState).toHaveBeenCalledTimes(2);
+
+    const preSpawnState = savePrState.mock.calls[0][0];
+    const finalState = savePrState.mock.calls[1][0];
+
+    expect(preSpawnState.activeRunId).toBeTruthy();
+    expect(preSpawnState.activeProcessId).toBeNull();
+    expect(spawnRepairRun).toHaveBeenCalledTimes(1);
+    expect(finalState.activeRunId).toBe(preSpawnState.activeRunId);
+    expect(finalState.activeProcessId).toBe(4321);
+  });
+
   it("syncs the Linear workpad when the PR is opted out", async () => {
     let savedState = null;
     const stateStore = {
