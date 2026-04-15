@@ -90,6 +90,16 @@ describe("parseStatusEnv", () => {
     expect(parsed.ANON_KEY).toBe("test-anon");
     expect(parsed.SERVICE_ROLE_KEY).toBe("test-service");
   });
+
+  it("unwraps shell-quoted values from the Supabase CLI", () => {
+    const parsed = parseStatusEnv(
+      'API_URL="http://127.0.0.1:55012"\nANON_KEY="test-anon"\nSINGLE_QUOTED=\'test-service\'\n',
+    );
+
+    expect(parsed.API_URL).toBe("http://127.0.0.1:55012");
+    expect(parsed.ANON_KEY).toBe("test-anon");
+    expect(parsed.SINGLE_QUOTED).toBe("test-service");
+  });
 });
 
 describe("formatSupabaseRuntimeFailure", () => {

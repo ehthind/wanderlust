@@ -5,6 +5,10 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
+      "@wanderlust/domains/bookings": path.resolve(
+        import.meta.dirname,
+        "../../packages/domains/bookings/src/index.ts",
+      ),
       "@wanderlust/domains/destinations": path.resolve(
         import.meta.dirname,
         "../../packages/domains/destinations/src/index.ts",
@@ -16,6 +20,10 @@ export default defineConfig({
       "@wanderlust/providers/workflow": path.resolve(
         import.meta.dirname,
         "../../packages/providers/src/workflow/index.ts",
+      ),
+      "@wanderlust/providers/booking": path.resolve(
+        import.meta.dirname,
+        "../../packages/providers/src/booking/index.ts",
       ),
       "@wanderlust/shared-config": path.resolve(
         import.meta.dirname,

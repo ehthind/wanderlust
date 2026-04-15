@@ -3,6 +3,9 @@ import { z } from "zod";
 export const tripDraftStatusSchema = z.enum(["draft", "planning", "ready", "failed"]);
 export const tripWorkflowStatusSchema = z.enum(["not_started", "running", "completed", "failed"]);
 export const tripBudgetStyleSchema = z.enum(["lean", "balanced", "luxury"]);
+export const monthStringSchema = z.string().regex(/^\d{4}-\d{2}$/);
+export const isoDateStringSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+export const tripExecutionStatusSchema = z.enum(["running", "completed", "failed", "unknown"]);
 
 export const destinationSummarySchema = z.object({
   id: z.string(),
@@ -14,6 +17,8 @@ export const destinationSummarySchema = z.object({
   budget: z.string(),
   visa: z.string(),
   idealTripLength: z.string(),
+  heroImageUrl: z.string().url(),
+  heroImageAccessibilityLabel: z.string(),
 });
 
 export const tripDraftSchema = z.object({
@@ -27,6 +32,9 @@ export const tripDraftSchema = z.object({
   workflowRunId: z.string().nullable(),
   workflowStatus: tripWorkflowStatusSchema,
   planSummary: z.string().nullable(),
+  travelMonth: monthStringSchema.nullable(),
+  tripNights: z.number().int().positive().nullable(),
+  adults: z.number().int().positive().nullable(),
 });
 
 export const planTripInputSchema = z.object({
@@ -48,6 +56,119 @@ export const bookingIntentSchema = z.object({
   status: z.enum(["draft", "priced", "confirmed", "cancelled"]),
 });
 
+export const featuredDiscoverChipSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+});
+
+export const featuredDiscoverCardSchema = z.object({
+  destination: destinationSummarySchema,
+  chips: z.array(featuredDiscoverChipSchema),
+  cues: z.object({
+    primaryAction: z.string(),
+    secondaryAction: z.string(),
+    gestureHint: z.string(),
+  }),
+});
+
+export const discoverFeedViewSchema = z.object({
+  cards: z.array(featuredDiscoverCardSchema).min(1),
+});
+
+export const destinationProfileDetailSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+});
+
+export const destinationProfileStoryCardSchema = z.object({
+  id: z.string(),
+  category: z.string(),
+  title: z.string(),
+  imageUrl: z.string().url(),
+  imageAccessibilityLabel: z.string(),
+});
+
+export const destinationProfileViewSchema = z.object({
+  destination: destinationSummarySchema,
+  details: z.array(destinationProfileDetailSchema).length(4),
+  stories: z.array(destinationProfileStoryCardSchema).length(8),
+});
+
+export const tripExecutionSchema = z.object({
+  workflowId: z.string(),
+  runId: z.string().nullable(),
+  status: tripExecutionStatusSchema,
+});
+
+export const tripStaySearchInputSchema = z.object({
+  travelMonth: monthStringSchema,
+  tripNights: z.number().int().min(1).max(14),
+  adults: z.number().int().min(1).max(6),
+});
+
+export const tripStaySearchPreferencesSchema = z.object({
+  travelMonth: monthStringSchema.nullable(),
+  tripNights: z.number().int().positive().nullable(),
+  adults: z.number().int().positive().nullable(),
+});
+
+export const candidateDateWindowSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  checkin: isoDateStringSchema,
+  checkout: isoDateStringSchema,
+  nights: z.number().int().positive(),
+});
+
+export const currentRefundabilitySchema = z.enum([
+  "refundable",
+  "partially_refundable",
+  "non_refundable",
+  "unknown",
+]);
+
+export const lodgingOfferSummarySchema = z.object({
+  provider: z.literal("expedia-rapid"),
+  windowId: z.string(),
+  windowLabel: z.string(),
+  checkin: isoDateStringSchema,
+  checkout: isoDateStringSchema,
+  nights: z.number().int().positive(),
+  propertyId: z.string(),
+  roomId: z.string(),
+  rateId: z.string(),
+  propertyName: z.string(),
+  roomName: z.string(),
+  imageUrl: z.string().url().nullable(),
+  addressLine1: z.string().nullable(),
+  city: z.string().nullable(),
+  countryCode: z.string().nullable(),
+  starRating: z.number().nullable(),
+  reviewScore: z.number().nullable(),
+  totalPrice: z.number().nonnegative(),
+  nightlyPrice: z.number().nonnegative().nullable(),
+  currency: z.string().length(3),
+  cancellationSummary: z.string(),
+  currentRefundability: currentRefundabilitySchema,
+  amenities: z.array(z.string()),
+});
+
+export const tripSelectedStaySchema = lodgingOfferSummarySchema.extend({
+  selectedAt: z.string().datetime(),
+});
+
+export const tripStaySearchResultSchema = z.object({
+  candidateWindows: z.array(candidateDateWindowSchema),
+  offers: z.array(lodgingOfferSummarySchema),
+});
+
+export const tripWorkspaceViewSchema = z.object({
+  tripDraft: tripDraftSchema,
+  execution: tripExecutionSchema.nullable(),
+  staySearch: tripStaySearchPreferencesSchema,
+  selectedStay: tripSelectedStaySchema.nullable(),
+});
+
 export const partnerProfileSchema = z.object({
   id: z.string(),
   kind: z.enum(["hostel", "hotel", "guide", "experience"]),
@@ -63,8 +184,21 @@ export const inboxThreadSummarySchema = z.object({
 });
 
 export type DestinationSummary = z.infer<typeof destinationSummarySchema>;
+export type FeaturedDiscoverCard = z.infer<typeof featuredDiscoverCardSchema>;
+export type DiscoverFeedView = z.infer<typeof discoverFeedViewSchema>;
+export type DestinationProfileDetail = z.infer<typeof destinationProfileDetailSchema>;
+export type DestinationProfileStoryCard = z.infer<typeof destinationProfileStoryCardSchema>;
+export type DestinationProfileView = z.infer<typeof destinationProfileViewSchema>;
 export type TripDraft = z.infer<typeof tripDraftSchema>;
 export type PlanTripInput = z.infer<typeof planTripInputSchema>;
+export type TripExecutionSummary = z.infer<typeof tripExecutionSchema>;
+export type TripStaySearchInput = z.infer<typeof tripStaySearchInputSchema>;
+export type TripStaySearchPreferences = z.infer<typeof tripStaySearchPreferencesSchema>;
+export type CandidateDateWindow = z.infer<typeof candidateDateWindowSchema>;
+export type LodgingOfferSummary = z.infer<typeof lodgingOfferSummarySchema>;
+export type TripSelectedStay = z.infer<typeof tripSelectedStaySchema>;
+export type TripStaySearchResult = z.infer<typeof tripStaySearchResultSchema>;
+export type TripWorkspaceView = z.infer<typeof tripWorkspaceViewSchema>;
 export type TravelerIdentity = z.infer<typeof travelerIdentitySchema>;
 export type BookingIntent = z.infer<typeof bookingIntentSchema>;
 export type PartnerProfile = z.infer<typeof partnerProfileSchema>;

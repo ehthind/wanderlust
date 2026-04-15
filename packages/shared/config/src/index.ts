@@ -170,6 +170,9 @@ const secretSchema = z.object({
   POSTHOG_KEY: z.string().optional(),
   LINEAR_API_KEY: z.string().optional(),
   GITHUB_TOKEN: z.string().optional(),
+  EXPEDIA_RAPID_API_KEY: z.string().optional(),
+  EXPEDIA_RAPID_SHARED_SECRET: z.string().optional(),
+  EXPEDIA_RAPID_BASE_URL: z.string().url().optional(),
 });
 
 export type BaseEnv = Omit<z.infer<typeof baseEnvSchema>, "DOPPLER_TOKEN"> & {

@@ -135,7 +135,28 @@ export const parseStatusEnv = (output) => {
       continue;
     }
 
-    parsed[line.slice(0, separator)] = line.slice(separator + 1);
+    const key = line.slice(0, separator);
+    const value = line.slice(separator + 1);
+
+    if (
+      value.length >= 2 &&
+      ((value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'")))
+    ) {
+      if (value.startsWith('"')) {
+        try {
+          parsed[key] = JSON.parse(value);
+          continue;
+        } catch {
+          // Fall back to raw string slicing if the CLI emitted a non-JSON-safe quoted value.
+        }
+      }
+
+      parsed[key] = value.slice(1, -1);
+      continue;
+    }
+
+    parsed[key] = value;
   }
 
   return parsed;

@@ -16,6 +16,9 @@ type TripDraftRow = {
   workflow_run_id: string | null;
   workflow_status: TripWorkspace["workflowStatus"];
   plan_summary: string | null;
+  travel_month: string | null;
+  trip_nights: number | null;
+  adults: number | null;
 };
 
 const mapTripDraft = (row: TripDraftRow): TripWorkspace => ({
@@ -29,6 +32,9 @@ const mapTripDraft = (row: TripDraftRow): TripWorkspace => ({
   workflowRunId: row.workflow_run_id,
   workflowStatus: row.workflow_status,
   planSummary: row.plan_summary,
+  travelMonth: row.travel_month,
+  tripNights: row.trip_nights,
+  adults: row.adults,
 });
 
 const buildSelectById = (id: string) =>
@@ -55,6 +61,9 @@ export const createDraftTripWorkspace = async (
     budget_style: input.budgetStyle ?? defaultTripBudgetStyle,
     status: "draft",
     workflow_status: "not_started",
+    travel_month: null,
+    trip_nights: null,
+    adults: null,
   };
 
   const rows = (await createSupabaseAdminRequest({
@@ -91,6 +100,9 @@ export const updateTripWorkspace = async (
     workflowRunId: string | null;
     workflowStatus: TripWorkspace["workflowStatus"];
     planSummary: string | null;
+    travelMonth: string | null;
+    tripNights: number | null;
+    adults: number | null;
   }>,
 ): Promise<TripWorkspace> => {
   const payload = Object.fromEntries(
@@ -100,6 +112,9 @@ export const updateTripWorkspace = async (
       ...(updates.workflowRunId !== undefined ? { workflow_run_id: updates.workflowRunId } : {}),
       ...(updates.workflowStatus ? { workflow_status: updates.workflowStatus } : {}),
       ...(updates.planSummary !== undefined ? { plan_summary: updates.planSummary } : {}),
+      ...(updates.travelMonth !== undefined ? { travel_month: updates.travelMonth } : {}),
+      ...(updates.tripNights !== undefined ? { trip_nights: updates.tripNights } : {}),
+      ...(updates.adults !== undefined ? { adults: updates.adults } : {}),
     }).filter(([, value]) => value !== undefined),
   );
 

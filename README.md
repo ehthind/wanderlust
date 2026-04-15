@@ -38,6 +38,7 @@ The canonical fresh-machine setup path lives in [`docs/runbooks/setup.md`](docs/
 - `gpt-5.1-codex-mini` as the default model hint in `WORKFLOW.md`
 
 ## First slice
+- `apps/ios`: native SwiftUI iPhone app for Discover, trip workspace, flexible-month stay search, and stay selection
 - `apps/web`: public product shell with Discover placeholder and health route
 - `workers/temporal`: sample Temporal worker and workflow
 - `packages/domains`: layered business-domain source
@@ -49,7 +50,10 @@ The canonical fresh-machine setup path lives in [`docs/runbooks/setup.md`](docs/
 - `tools/vercel`: repo-local wrappers for Vercel auth, linking, env sync, and deployment fallback flows
 
 ## Web deploy platform
-- `apps/web` is the only runtime targeted at Vercel.
+- `apps/ios` is the primary client, but it consumes the same first-party API hosted by `apps/web`.
+- Generate the Xcode project with `cd apps/ios && xcodegen generate`.
+- Run the native simulator suite with `cd apps/ios && xcodebuild test -project Wanderlust.xcodeproj -scheme Wanderlust -destination 'platform=iOS Simulator,name=iPhone 16'`.
+- `apps/web` remains the runtime targeted at Vercel.
 - Preview and production deployments should come from the Git-connected Vercel project flow.
 - Doppler remains the secret source of truth; Vercel envs are synced from Doppler configs.
 - Manual fallback deploys are available via `corepack pnpm vercel:deploy:preview` and `corepack pnpm vercel:deploy:prod`.

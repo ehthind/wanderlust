@@ -1,6 +1,11 @@
-import type { DestinationSummary } from "@wanderlust/shared-schemas";
+import type {
+  DestinationProfileDetail,
+  DestinationProfileStoryCard,
+  DestinationSummary,
+} from "@wanderlust/shared-schemas";
 
-export type DestinationProfile = DestinationSummary & {
-  whyGo: string;
-  storyCategories: string[];
+export type DestinationProfile = {
+  destination: DestinationSummary;
+  details: DestinationProfileDetail[];
+  stories: DestinationProfileStoryCard[];
 };

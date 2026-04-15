@@ -1,3 +1,3 @@
 import { getBookingModel } from "./runtime";
 
-export const getBookingView = () => getBookingModel();
+export const getBookingView = (tripDraftId: string) => getBookingModel(tripDraftId);

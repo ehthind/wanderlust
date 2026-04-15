@@ -10,6 +10,7 @@ Wanderlust follows a rigid, agent-legible architecture inspired by the Harness E
 - `Layered domain model`: every domain uses `types -> config -> repo -> service -> runtime -> ui`, with cross-cutting concerns entering through `providers`.
 
 ## Runtime split
+- `apps/ios`: SwiftUI iPhone client and the primary product-facing booking surface
 - `apps/web`: Next.js product shell and public routes
 - `workers/temporal`: durable workflow worker
 - `packages/domains`: business-domain implementation
@@ -37,6 +38,7 @@ Cross-cutting integrations are accessed only through provider interfaces:
 - agent runtime
 
 ## Product platform
+- `SwiftUI on iOS 18+` for the primary guest-facing client
 - `Vercel` for the deployed Next.js web surface
 - `Supabase` for app state, auth, storage, and retrieval
 - `Temporal` for durable business workflows
@@ -70,5 +72,6 @@ Cross-cutting integrations are accessed only through provider interfaces:
 - Managed sinks such as Sentry and PostHog are optional exports; local runs must still be debuggable without them.
 
 ## Deployment split
+- `apps/ios` is repo-local and runs through Xcode/TestFlight style distribution flows rather than the web deploy path.
 - `apps/web` can be deployed to Vercel with Doppler-projected envs.
 - `workers/temporal` remains outside Vercel and is treated as an external dependency by the web app.

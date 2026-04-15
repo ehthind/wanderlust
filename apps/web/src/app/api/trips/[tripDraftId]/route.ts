@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { createBookingService } from "@wanderlust/domains/bookings";
 import { createTripWorkspaceService } from "@wanderlust/domains/trips";
+import { tripWorkspaceViewSchema } from "@wanderlust/shared-schemas";
 
 export async function GET(
   _request: Request,
@@ -11,8 +13,9 @@ export async function GET(
   },
 ) {
   const { tripDraftId } = await context.params;
-  const service = createTripWorkspaceService();
-  const tripDraft = await service.loadTripWorkspace(tripDraftId);
+  const tripService = createTripWorkspaceService();
+  const bookingService = createBookingService();
+  const tripDraft = await tripService.loadTripWorkspace(tripDraftId);
 
   if (!tripDraft) {
     return NextResponse.json(
@@ -24,11 +27,19 @@ export async function GET(
     );
   }
 
-  const execution = await service.loadTripExecution(tripDraftId);
+  const execution = await tripService.loadTripExecution(tripDraftId);
+  const selectedStay = await bookingService.loadSelectedStay(tripDraftId);
 
-  return NextResponse.json({
-    ok: true,
-    tripDraft,
-    execution,
-  });
+  return NextResponse.json(
+    tripWorkspaceViewSchema.parse({
+      tripDraft,
+      execution,
+      staySearch: {
+        travelMonth: tripDraft.travelMonth,
+        tripNights: tripDraft.tripNights,
+        adults: tripDraft.adults,
+      },
+      selectedStay,
+    }),
+  );
 }

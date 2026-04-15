@@ -1,3 +1,3 @@
 import { loadBookingPreview } from "./service";
 
-export const getBookingModel = () => loadBookingPreview();
+export const getBookingModel = (tripDraftId: string) => loadBookingPreview(tripDraftId);
