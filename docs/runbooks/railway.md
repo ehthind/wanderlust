@@ -20,6 +20,7 @@ Keep Railway as the default hosted worker target without making it part of the c
 - `RAILWAY_ENVIRONMENT` or the default `dev`
 
 ## Expected Railway runtime env
+- `SERVICE_NAME=wanderlust-temporal-worker`
 - `TEMPORAL_ADDRESS`
 - `TEMPORAL_NAMESPACE`
 - `TEMPORAL_TASK_QUEUE`
@@ -31,9 +32,12 @@ Keep Railway as the default hosted worker target without making it part of the c
 - `POSTHOG_HOST`
 - `POSTHOG_KEY`
 
+The current Railway `dev` environment is treated as the worker's preview-equivalent Sentry environment. When a dedicated Railway production environment exists, mirror the same worker Sentry setup there.
+
 ## Next hosted step
 Once the Railway service exists and is linked:
 1. sync worker envs from Doppler with `corepack pnpm railway:env:dev`
 2. rely on the tracked [railway.toml](/Users/amritthind/code/wanderlust/railway.toml) build/start contract for `@wanderlust/temporal-worker`
 3. deploy the worker with `corepack pnpm railway:deploy:worker`
 4. verify it can connect to Temporal Cloud `dev`
+5. verify worker failures arrive in Sentry with `service=wanderlust-temporal-worker`

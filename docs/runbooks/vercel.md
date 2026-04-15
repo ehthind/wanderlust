@@ -35,7 +35,7 @@ Production pulls from Doppler `wanderlust/prd`.
 
 Managed envs synced into Vercel:
 - `APP_NAME`
-- `SERVICE_NAME`
+- `SERVICE_NAME=wanderlust-web`
 - `WANDERLUST_SECRETS_MODE=env`
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
@@ -48,6 +48,8 @@ Managed envs synced into Vercel:
 - `SENTRY_DSN`
 - `POSTHOG_HOST`
 - `POSTHOG_KEY`
+
+The web app derives the browser-facing Sentry DSN, release, and environment from these managed envs during the Next.js build. No separate Doppler key is required for browser Sentry.
 
 Values intentionally not synced:
 - local-only metadata such as `WORKSPACE_NAME`, `SYMPHONY_*`, `WEB_PORT`
@@ -70,3 +72,4 @@ Values intentionally not synced:
 - `vercel:link` uses the repo root so the monorepo stays intact. The linked Vercel project should still point at `apps/web` as its root directory.
 - Use `vercel:pull:*` after linking to materialize local project metadata and confirm the project/environment mapping.
 - Preview deployments should be the normal PR surface once the Git integration is connected.
+- Sentry stays additive to the local observability loop; the web app still boots without `SENTRY_DSN`.

@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { proxyActivities, workflowInfo } from "@temporalio/workflow";
 
 import type { PlanTripWorkflowInput } from "@wanderlust/providers/workflow";
 
@@ -12,6 +12,28 @@ const { buildPlanTripSummary, completePlanTrip, failPlanTrip } = proxyActivities
     },
   },
 );
+
+const getFailedActivityName = (error: unknown): string => {
+  if (!error || typeof error !== "object") {
+    return "unknown";
+  }
+
+  const record = error as Record<string, unknown>;
+
+  if (typeof record.activityType === "string") {
+    return record.activityType;
+  }
+
+  if (record.cause && typeof record.cause === "object") {
+    const cause = record.cause as Record<string, unknown>;
+
+    if (typeof cause.activityType === "string") {
+      return cause.activityType;
+    }
+  }
+
+  return "unknown";
+};
 
 export const planTripWorkflow = async (input: PlanTripWorkflowInput) => {
   try {
@@ -27,10 +49,19 @@ export const planTripWorkflow = async (input: PlanTripWorkflowInput) => {
       planSummary: tripDraft.planSummary,
     };
   } catch (error) {
+    const info = workflowInfo();
     const message = error instanceof Error ? error.message : String(error);
     await failPlanTrip({
       tripDraftId: input.tripDraftId,
-      message,
+      failure: {
+        workflowId: info.workflowId,
+        runId: info.runId,
+        workflow: info.workflowType,
+        activity: getFailedActivityName(error),
+        tripDraftId: input.tripDraftId,
+        message,
+        ...(error instanceof Error && error.name ? { name: error.name } : {}),
+      },
     });
     throw error;
   }

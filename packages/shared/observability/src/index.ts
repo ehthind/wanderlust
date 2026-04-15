@@ -1,5 +1,3 @@
-import crypto from "node:crypto";
-
 export type AppLogLevel = "debug" | "info" | "warn" | "error";
 
 export type TraceContext = {
@@ -29,17 +27,23 @@ export type AppLogEvent = {
 };
 
 const secretKeyPattern = /(token|secret|key|dsn|authorization|cookie)/i;
+const defaultLabelValues = new Set(["local", "manual"]);
 
-const redactValue = (value: unknown): unknown => {
+export type SentryContext = {
+  tags: Record<string, string>;
+  extras: Record<string, unknown>;
+};
+
+export const sanitizeObservabilityValue = (value: unknown): unknown => {
   if (Array.isArray(value)) {
-    return value.map(redactValue);
+    return value.map(sanitizeObservabilityValue);
   }
 
   if (value && typeof value === "object") {
     return Object.fromEntries(
       Object.entries(value).map(([key, nested]) => [
         key,
-        secretKeyPattern.test(key) ? "[REDACTED]" : redactValue(nested),
+        secretKeyPattern.test(key) ? "[REDACTED]" : sanitizeObservabilityValue(nested),
       ]),
     );
   }
@@ -48,20 +52,21 @@ const redactValue = (value: unknown): unknown => {
 };
 
 type ContextSource = Record<string, string | number | undefined>;
+type ObservabilityRecord = Record<string, unknown>;
 
 export const formatLogEvent = (event: AppLogEvent): string =>
   JSON.stringify({
     ts: new Date().toISOString(),
     ...event,
-    ...(event.metadata ? { metadata: redactValue(event.metadata) } : {}),
+    ...(event.metadata ? { metadata: sanitizeObservabilityValue(event.metadata) } : {}),
   });
 
 export const buildTraceContext = (
   scope: string,
   source: ContextSource = process.env,
 ): TraceContext => ({
-  traceId: crypto.randomUUID(),
-  spanId: crypto.randomUUID().slice(0, 16),
+  traceId: globalThis.crypto.randomUUID(),
+  spanId: globalThis.crypto.randomUUID().slice(0, 16),
   service: String(source.SERVICE_NAME ?? "wanderlust"),
   workspace: String(source.WORKSPACE_NAME ?? "local"),
   issue: String(source.SYMPHONY_ISSUE_IDENTIFIER ?? "local"),
@@ -98,3 +103,63 @@ export const buildObservabilityLabels = (source: ContextSource = process.env) =>
   issue: String(source.SYMPHONY_ISSUE_IDENTIFIER ?? "local"),
   runId: String(source.SYMPHONY_RUN_ID ?? "manual"),
 });
+
+type SentryContextOptions = {
+  runtime: string;
+  scope?: string;
+  source?: ContextSource;
+  metadata?: Record<string, unknown>;
+  extraTags?: Record<string, string | number | boolean | undefined>;
+  extraExtras?: Record<string, unknown>;
+};
+
+const buildAvailableLabels = (source: ContextSource) => {
+  const labels = buildObservabilityLabels(source);
+
+  return Object.fromEntries(
+    Object.entries(labels).filter(([key, value]) => {
+      if (key === "service") {
+        return Boolean(value);
+      }
+
+      return value.length > 0 && !defaultLabelValues.has(value);
+    }),
+  );
+};
+
+export const buildSentryContext = ({
+  runtime,
+  scope,
+  source = process.env,
+  metadata,
+  extraTags,
+  extraExtras,
+}: SentryContextOptions): SentryContext => {
+  const labels = buildAvailableLabels(source);
+  const tags = Object.fromEntries(
+    Object.entries({
+      runtime,
+      ...labels,
+      ...(scope ? { scope } : {}),
+      ...Object.fromEntries(
+        Object.entries(extraTags ?? {}).flatMap(([key, value]) =>
+          value === undefined ? [] : [[key, String(value)]],
+        ),
+      ),
+    }).filter(([, value]) => value.length > 0),
+  );
+  const sanitizedExtras = extraExtras
+    ? (sanitizeObservabilityValue(extraExtras) as ObservabilityRecord)
+    : undefined;
+
+  return {
+    tags,
+    extras: {
+      runtime,
+      ...(Object.keys(labels).length > 0 ? { labels } : {}),
+      ...(scope ? { scope } : {}),
+      ...(metadata ? { metadata: sanitizeObservabilityValue(metadata) } : {}),
+      ...(sanitizedExtras ?? {}),
+    },
+  };
+};
