@@ -15,6 +15,7 @@ const requiredFiles = [
   "WORKFLOW.md",
   "docs/architecture/index.md",
   "docs/product/index.md",
+  "docs/runbooks/setup.md",
   "docs/runbooks/worktree-dev.md",
   "docs/runbooks/symphony.md",
   "docs/runbooks/doppler.md",

@@ -3,6 +3,8 @@
 ## Goal
 Every task should be bootable in an isolated workspace.
 
+On a fresh machine, start with [`setup.md`](./setup.md) before the runtime commands in this runbook.
+
 ## Current first-slice behavior
 - configure a scoped write-capable Doppler token before starting the runtime or Symphony operator:
   - `doppler configure set token=... project=wanderlust config=local_main --scope /path/to/repo-or-worktree`

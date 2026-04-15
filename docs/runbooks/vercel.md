@@ -17,8 +17,7 @@ Deploy only the Wanderlust web app to Vercel while keeping the Temporal worker a
 - this keeps Vercel agent-friendly and avoids home-directory cache drift
 
 ## One-time setup
-1. Install dependencies:
-   - `corepack pnpm install`
+1. Finish the core repo setup in [`setup.md`](./setup.md).
 2. Authenticate:
    - `corepack pnpm vercel:login`
 3. Create or link the repo project:

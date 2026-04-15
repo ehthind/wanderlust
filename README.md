@@ -13,6 +13,10 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - hybrid observability with local agent-debug surfaces and optional managed exports
 
 ## Core commands
+- fresh machine:
+  - `corepack enable`
+  - `corepack pnpm setup`
+  - `corepack pnpm env:doctor`
 - export `DOPPLER_TOKEN` before runtime or Symphony commands that need managed secrets
 - `corepack pnpm install`
 - `corepack pnpm dev`
@@ -24,6 +28,8 @@ Wanderlust is an agent-first travel product scaffold built to be legible to codi
 - `corepack pnpm check:observability`
 - `corepack pnpm symphony:setup`
 - `corepack pnpm symphony:run`
+
+The canonical fresh-machine setup path lives in [`docs/runbooks/setup.md`](docs/runbooks/setup.md).
 
 ## Conservative Codex defaults
 - one active issue at a time
