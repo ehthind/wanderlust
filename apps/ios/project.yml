@@ -1,0 +1,58 @@
+name: Wanderlust
+options:
+  bundleIdPrefix: com.wanderlust
+  deploymentTarget:
+    iOS: "18.0"
+targets:
+  Wanderlust:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: Wanderlust
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wanderlust.ios
+        PRODUCT_NAME: Wanderlust
+        SWIFT_VERSION: 6.0
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 0.1.0
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    scheme:
+      gatherCoverageData: true
+      testTargets:
+        - WanderlustTests
+        - WanderlustUITests
+  WanderlustTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: WanderlustTests
+    dependencies:
+      - target: Wanderlust
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wanderlust.ios.tests
+        SWIFT_VERSION: 6.0
+        GENERATE_INFOPLIST_FILE: YES
+  WanderlustUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: WanderlustUITests
+    dependencies:
+      - target: Wanderlust
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wanderlust.ios.uitests
+        SWIFT_VERSION: 6.0
+        GENERATE_INFOPLIST_FILE: YES
