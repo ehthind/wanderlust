@@ -4,12 +4,13 @@
   "version": "0.1.0",
   "packageManager": "pnpm@10.10.0",
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0"
   },
   "dependencies": {
     "@temporalio/client": "^1.11.4"
   },
   "scripts": {
+    "setup": "node tools/dev/bootstrap.mjs",
     "dev": "corepack pnpm supabase:prepare && corepack pnpm temporal:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm -r --parallel --stream --filter @wanderlust/web --filter @wanderlust/temporal-worker dev",
     "dev:web": "corepack pnpm supabase:prepare && corepack pnpm temporal:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm --filter @wanderlust/web dev",
     "dev:worker": "corepack pnpm supabase:prepare && corepack pnpm temporal:prepare && node tools/dev/guard-secrets.mjs -- corepack pnpm --filter @wanderlust/temporal-worker dev",
@@ -56,6 +57,7 @@
     "check:docs": "node tools/checks/docs.mjs",
     "check:plans": "node tools/checks/plans.mjs",
     "check:files": "node tools/checks/files.mjs",
+    "env:doctor": "node tools/dev/doctor.mjs",
     "check:observability": "node tools/checks/observability.mjs",
     "ci:required-check:delivery-gate": "node tools/checks/run-required-check.mjs delivery-gate",
     "ci:required-check:observability-contract": "node tools/checks/run-required-check.mjs observability-contract",

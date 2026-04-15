@@ -12,6 +12,7 @@
 - `docs/runbooks/observability.md`
 
 ## Local expectations
+- finish the core repo setup in [`setup.md`](./setup.md)
 - `corepack` is available
 - `LINEAR_API_KEY` is set when running with a live tracker
 - `DOPPLER_TOKEN` is set so the runtime, hooks, and agent workspaces can fetch managed secrets
