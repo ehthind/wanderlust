@@ -13,6 +13,8 @@
 		2180A68897362DBF683B50ED /* SavedDestinationsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703F08342B507811BF8490E8 /* SavedDestinationsStore.swift */; };
 		38852CDEBA78D79745EADA1F /* TripWorkspaceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 647EB3D248665F85AE7CA793 /* TripWorkspaceScreen.swift */; };
 		4B7092ABE0FA55BC61B36A26 /* FixtureAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87735EB5EF619A9917EF9A38 /* FixtureAPIService.swift */; };
+		6D9A5C2F5B7E4B1A9C6D3E21 /* DiscoverProfileSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B2D4E6F8A1C43D5B7E9F102 /* DiscoverProfileSurface.swift */; };
+		91E7C4A85F1D42B68C2A7F30 /* DiscoverSharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C3E5F709B2D41A6C8E0F213 /* DiscoverSharedComponents.swift */; };
 		84131FE440C8D849E1A714BF /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1107961B08BD0A76BD43F166 /* DiscoverView.swift */; };
 		A7B31FA64B747841BEA89C7C /* WanderlustApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7D3D425A047B7EE2F0B0AB /* WanderlustApp.swift */; };
 		AEEB57CB1586327E388A77FC /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78C0FA573250401B83D853F /* APIClient.swift */; };
@@ -61,9 +63,11 @@
 		567D0969EF0BEB58238E5FB0 /* DiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModel.swift; sourceTree = "<group>"; };
 		5D7D3D425A047B7EE2F0B0AB /* WanderlustApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WanderlustApp.swift; sourceTree = "<group>"; };
 		647EB3D248665F85AE7CA793 /* TripWorkspaceScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripWorkspaceScreen.swift; sourceTree = "<group>"; };
+		7B2D4E6F8A1C43D5B7E9F102 /* DiscoverProfileSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverProfileSurface.swift; sourceTree = "<group>"; };
 		703F08342B507811BF8490E8 /* SavedDestinationsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDestinationsStore.swift; sourceTree = "<group>"; };
 		7E55000D2ADC26723918C1E3 /* TripWorkspaceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripWorkspaceViewModel.swift; sourceTree = "<group>"; };
 		7EAD408E6FC92718AE413A38 /* LastTripStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastTripStoreTests.swift; sourceTree = "<group>"; };
+		8C3E5F709B2D41A6C8E0F213 /* DiscoverSharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverSharedComponents.swift; sourceTree = "<group>"; };
 		87735EB5EF619A9917EF9A38 /* FixtureAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixtureAPIService.swift; sourceTree = "<group>"; };
 		99ABCFD7D0F8CD0E346700F9 /* WanderlustRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WanderlustRootView.swift; sourceTree = "<group>"; };
 		A81F0391EAD505C46116B868 /* ContractDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContractDecodingTests.swift; sourceTree = "<group>"; };
@@ -182,6 +186,8 @@
 		D1EA2EF33011282EE6718444 /* Discover */ = {
 			isa = PBXGroup;
 			children = (
+				7B2D4E6F8A1C43D5B7E9F102 /* DiscoverProfileSurface.swift */,
+				8C3E5F709B2D41A6C8E0F213 /* DiscoverSharedComponents.swift */,
 				1107961B08BD0A76BD43F166 /* DiscoverView.swift */,
 				567D0969EF0BEB58238E5FB0 /* DiscoverViewModel.swift */,
 			);
@@ -338,6 +344,8 @@
 				E250DD87B722C3EBBF741F82 /* AppEnvironment.swift in Sources */,
 				DB8A8EF2A3B628AB6D77AF9B /* AppState.swift in Sources */,
 				E7F60F00DBA130775390DFA0 /* Contracts.swift in Sources */,
+				6D9A5C2F5B7E4B1A9C6D3E21 /* DiscoverProfileSurface.swift in Sources */,
+				91E7C4A85F1D42B68C2A7F30 /* DiscoverSharedComponents.swift in Sources */,
 				84131FE440C8D849E1A714BF /* DiscoverView.swift in Sources */,
 				1B8587971C5FC769287B4C72 /* DiscoverViewModel.swift in Sources */,
 				4B7092ABE0FA55BC61B36A26 /* FixtureAPIService.swift in Sources */,

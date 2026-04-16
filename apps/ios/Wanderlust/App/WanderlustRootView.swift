@@ -33,6 +33,7 @@ struct WanderlustRootView: View {
                 )
                 .tag(AppState.Tab.inbox)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .toolbar(.hidden, for: .tabBar)
         }
         .overlay(alignment: .bottom) {
