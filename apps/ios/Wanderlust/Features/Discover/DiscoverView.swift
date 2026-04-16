@@ -34,10 +34,12 @@ struct DiscoverView: View {
         GeometryReader { proxy in
             let pageWidth = min(proxy.size.width, UIScreen.main.bounds.width)
             let pageSize = CGSize(width: pageWidth, height: proxy.size.height)
+            let feedCardBottomInset = proxy.safeAreaInsets.bottom
 
             DiscoverFeedSurface(
                 viewModel: viewModel,
                 pageSize: pageSize,
+                feedCardBottomInset: feedCardBottomInset,
                 scrollTarget: $feedScrollTarget,
                 onOpenDestinationGuide: openDestinationGuide
             )
@@ -151,6 +153,7 @@ private struct DiscoverDestinationGuideOverlay: View {
 private struct DiscoverFeedSurface: View {
     @ObservedObject var viewModel: DiscoverViewModel
     let pageSize: CGSize
+    let feedCardBottomInset: CGFloat
     @Binding var scrollTarget: String?
     let onOpenDestinationGuide: (String) -> Void
 
@@ -174,7 +177,11 @@ private struct DiscoverFeedSurface: View {
                             ForEach(viewModel.cards) { card in
                                 DiscoverFeedCard(
                                     card: card,
-                                    pageSize: pageSize,
+                                    pageSize: CGSize(
+                                        width: pageSize.width,
+                                        height: pageSize.height + feedCardBottomInset
+                                    ),
+                                    bottomContentInset: feedCardBottomInset,
                                     isSaved: viewModel.isSaved(destinationId: card.destination.id),
                                     isCurrent: viewModel.currentCard?.destination.id == card.destination.id,
                                     isPlanning: viewModel.isPlanning && viewModel.currentCard?.destination.id == card.destination.id,
@@ -209,7 +216,7 @@ private struct DiscoverFeedSurface: View {
             }
         }
         .frame(width: pageSize.width, height: pageSize.height)
-        .ignoresSafeArea(edges: .top)
+        .ignoresSafeArea(edges: [.top, .bottom])
         .overlay {
             DiscoverSwipeCaptureView(
                 onSwipeUp: {
@@ -254,6 +261,7 @@ private struct DiscoverFeedSurface: View {
 private struct DiscoverFeedCard: View {
     let card: FeaturedDiscoverCard
     let pageSize: CGSize
+    let bottomContentInset: CGFloat
     let isSaved: Bool
     let isCurrent: Bool
     let isPlanning: Bool
@@ -298,7 +306,7 @@ private struct DiscoverFeedCard: View {
                     }
                 }
                 .padding(.horizontal, DiscoverViewLayout.feedHorizontalPadding)
-                .padding(.bottom, DiscoverViewLayout.feedBottomChromePadding)
+                .padding(.bottom, DiscoverViewLayout.feedBottomChromePadding + bottomContentInset)
             }
             .frame(
                 width: pageSize.width,
