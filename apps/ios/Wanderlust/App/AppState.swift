@@ -10,19 +10,7 @@ final class AppState: ObservableObject {
         case inbox
     }
 
-    enum DiscoverSurface: Hashable {
-        case feed
-        case profile
-    }
-
-    @Published var selectedTab: Tab = .discover {
-        didSet {
-            if selectedTab != .discover {
-                discoverSurface = .feed
-            }
-        }
-    }
-    @Published var discoverSurface: DiscoverSurface = .feed
+    @Published var selectedTab: Tab = .discover
     @Published var activeTripDraftId: String?
 
     let api: any WanderlustAPI
@@ -51,7 +39,6 @@ final class AppState: ObservableObject {
     func openTrip(_ tripDraftId: String) {
         activeTripDraftId = tripDraftId
         lastTripStore.saveTripDraftId(tripDraftId)
-        discoverSurface = .feed
         selectedTab = .trips
     }
 }

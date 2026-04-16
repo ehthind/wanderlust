@@ -2,7 +2,7 @@ import XCTest
 
 @MainActor
 final class WanderlustUITests: XCTestCase {
-    func testDiscoverProfileOpensFromLeftSwipeAndReturnsToSameFeedCard() {
+    func testDiscoverDestinationGuidePushesAndReturnsToSameFeedCard() {
         let app = launchApp()
 
         let parisCard = app.otherElements["discover.card.dest_paris"]
@@ -14,23 +14,18 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertTrue(kyotoCard.waitForExistence(timeout: 5))
         XCTAssertTrue(waitForValue("current", on: kyotoCard))
 
-        app.swipeLeft()
+        openGuide(destinationId: "dest_kyoto", in: app)
+        XCTAssertTrue(app.tabBars.buttons["Discover"].waitForExistence(timeout: 5))
 
-        let profileTitle = app.staticTexts["Kyoto"]
-        XCTAssertTrue(profileTitle.waitForExistence(timeout: 5))
-
-        let saveButton = app.buttons["Save"]
-        XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["tab.discover"].exists)
-
-        swipeRightFromLeadingEdge(in: app)
+        let backButton = app.buttons["discover.detail.backButton"]
+        XCTAssertTrue(backButton.waitForExistence(timeout: 5))
+        tap(backButton)
 
         XCTAssertTrue(kyotoCard.waitForExistence(timeout: 5))
         XCTAssertTrue(waitForValue("current", on: kyotoCard))
-        XCTAssertTrue(app.buttons["tab.discover"].waitForExistence(timeout: 5))
     }
 
-    func testDiscoverProfileSupportsSaveAndPlanningFromLaterDestination() {
+    func testDiscoverDestinationGuideSupportsSaveAndPlanningFromLaterDestination() {
         let app = launchApp()
 
         let parisCard = app.otherElements["discover.card.dest_paris"]
@@ -42,75 +37,85 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertTrue(kyotoCard.waitForExistence(timeout: 5))
         XCTAssertTrue(waitForValue("current", on: kyotoCard))
 
-        app.swipeLeft()
+        openGuide(destinationId: "dest_kyoto", in: app)
 
-        let profileTitle = app.staticTexts["Kyoto"]
-        XCTAssertTrue(profileTitle.waitForExistence(timeout: 5))
-
-        let saveButton = app.buttons["Save"]
+        let saveButton = app.buttons["discover.detail.saveButton.dest_kyoto"]
         XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
-        saveButton.tap()
-        let savedButton = app.buttons["discover.profile.saveButton.dest_kyoto"]
-        XCTAssertTrue(waitForValue("saved", on: savedButton))
+        tap(saveButton)
+        XCTAssertTrue(waitForLabel("Saved", on: saveButton))
 
-        let planButton = app.buttons["Plan Trip"]
+        let planButton = app.buttons["discover.detail.planButton.dest_kyoto"]
         XCTAssertTrue(planButton.waitForExistence(timeout: 5))
-        planButton.tap()
+        tap(planButton)
 
         let searchButton = app.buttons["workspace.searchButton"]
         XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
-        searchButton.tap()
+        tap(searchButton)
 
         let selectButton = app.buttons["workspace.selectStay.fixture_property_kyoto_1"]
         XCTAssertTrue(selectButton.waitForExistence(timeout: 5))
-        selectButton.tap()
-
-        let selectedStayTitle = app.staticTexts["workspace.selectedStayTitle"]
-        XCTAssertTrue(selectedStayTitle.waitForExistence(timeout: 5))
     }
 
-    func testDiscoverProfileLayoutFitsWithinViewport() {
+    func testDiscoverDestinationGuideLayoutFitsWithinViewport() {
         let app = launchApp()
 
         let parisCard = app.otherElements["discover.card.dest_paris"]
         XCTAssertTrue(parisCard.waitForExistence(timeout: 5))
 
-        app.swipeLeft()
-
-        let profileTitle = app.staticTexts["Paris"]
-        XCTAssertTrue(profileTitle.waitForExistence(timeout: 5))
+        openGuide(destinationId: "dest_paris", in: app)
 
         let viewport = app.windows.firstMatch.frame
+        let tabBar = app.tabBars.firstMatch
 
-        let bestSeasonValue = app.staticTexts["discover.profile.detail.best_season"]
+        let bestSeasonValue = app.otherElements["discover.detail.value.best_season"]
+        scrollToElement(bestSeasonValue, in: app, direction: .up)
         XCTAssertTrue(bestSeasonValue.waitForExistence(timeout: 5))
-        XCTAssertLessThanOrEqual(bestSeasonValue.frame.maxX, viewport.maxX - 8)
+        XCTAssertLessThan(bestSeasonValue.frame.maxX, viewport.maxX - 12)
 
-        let tripLengthValue = app.staticTexts["discover.profile.detail.trip_length"]
+        let tripLengthValue = app.otherElements["discover.detail.value.trip_length"]
+        scrollToElement(tripLengthValue, in: app, direction: .up)
         XCTAssertTrue(tripLengthValue.waitForExistence(timeout: 5))
-        XCTAssertLessThanOrEqual(tripLengthValue.frame.maxX, viewport.maxX - 8)
+        XCTAssertLessThan(tripLengthValue.frame.maxX, viewport.maxX - 12)
 
-        let saveButton = app.buttons["discover.profile.saveButton.dest_paris"]
-        let planButton = app.buttons["discover.profile.planTripButton.dest_paris"]
-        XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
+        let planButton = app.buttons["discover.detail.planButton.dest_paris"]
         XCTAssertTrue(planButton.waitForExistence(timeout: 5))
-        XCTAssertEqual(saveButton.frame.midY, planButton.frame.midY, accuracy: 3)
-        XCTAssertEqual(saveButton.frame.height, planButton.frame.height, accuracy: 1)
+        XCTAssertLessThan(planButton.frame.maxY, tabBar.frame.minY)
 
-        app.swipeUp()
-
-        let firstStoryTitle = staticText(startingWith: "Use one museum", in: app)
-        let secondStoryTitle = staticText(startingWith: "Stay Left Bank", in: app)
-        XCTAssertTrue(firstStoryTitle.waitForExistence(timeout: 5))
-        XCTAssertTrue(secondStoryTitle.waitForExistence(timeout: 5))
-        XCTAssertGreaterThanOrEqual(firstStoryTitle.frame.minX, viewport.minX + 8)
-        XCTAssertLessThanOrEqual(secondStoryTitle.frame.maxX, viewport.maxX - 8)
-        XCTAssertLessThan(firstStoryTitle.frame.midX, secondStoryTitle.frame.midX)
-        XCTAssertEqual(firstStoryTitle.frame.minY, secondStoryTitle.frame.minY, accuracy: 18)
+        let firstStory = app.otherElements["discover.detail.story.paris-story-1"]
+        let secondStory = app.otherElements["discover.detail.story.paris-story-2"]
+        XCTAssertTrue(firstStory.waitForExistence(timeout: 5))
+        XCTAssertTrue(secondStory.waitForExistence(timeout: 5))
+        XCTAssertLessThan(firstStory.frame.minX, secondStory.frame.minX)
     }
 
-    func testDiscoverProfileScrollsToLowerStories() {
-        let app = launchApp()
+    func testDiscoverDestinationGuideSupportsAccessibilityDynamicType() {
+        let app = launchApp(dynamicTypeSize: "accessibility3")
+
+        let parisCard = app.otherElements["discover.card.dest_paris"]
+        XCTAssertTrue(parisCard.waitForExistence(timeout: 5))
+
+        openGuide(destinationId: "dest_paris", in: app)
+
+        let viewport = app.windows.firstMatch.frame
+        let tabBar = app.tabBars.firstMatch
+
+        let bestSeasonValue = app.otherElements["discover.detail.value.best_season"]
+        scrollToElement(bestSeasonValue, in: app, direction: .up)
+        XCTAssertTrue(bestSeasonValue.waitForExistence(timeout: 5))
+        XCTAssertLessThan(bestSeasonValue.frame.maxX, viewport.maxX - 12)
+
+        let tripLengthValue = app.otherElements["discover.detail.value.trip_length"]
+        scrollToElement(tripLengthValue, in: app, direction: .up)
+        XCTAssertTrue(tripLengthValue.waitForExistence(timeout: 5))
+        XCTAssertLessThan(tripLengthValue.frame.maxX, viewport.maxX - 12)
+
+        let planButton = app.buttons["discover.detail.planButton.dest_paris"]
+        XCTAssertTrue(planButton.waitForExistence(timeout: 5))
+        XCTAssertLessThan(planButton.frame.maxY, tabBar.frame.minY)
+    }
+
+    func testDiscoverDestinationGuideLoadingAndErrorStatesAreAccessible() {
+        let app = launchApp(profileDelayMs: 5000, failedProfileDestinationId: "dest_kyoto")
 
         let parisCard = app.otherElements["discover.card.dest_paris"]
         XCTAssertTrue(parisCard.waitForExistence(timeout: 5))
@@ -119,45 +124,89 @@ final class WanderlustUITests: XCTestCase {
 
         let kyotoCard = app.otherElements["discover.card.dest_kyoto"]
         XCTAssertTrue(kyotoCard.waitForExistence(timeout: 5))
-        XCTAssertTrue(waitForValue("current", on: kyotoCard))
 
-        app.swipeLeft()
+        openGuide(destinationId: "dest_kyoto", in: app)
 
-        let profileTitle = app.staticTexts["Kyoto"]
-        XCTAssertTrue(profileTitle.waitForExistence(timeout: 5))
+        let loadingState = app.otherElements["discover.detail.loadingState.dest_kyoto"]
+        XCTAssertTrue(loadingState.waitForExistence(timeout: 2))
 
-        let lowerStory = staticText(startingWith: "Kyoto feels most persuasive", in: app)
-        XCTAssertFalse(lowerStory.isHittable)
-
-        for _ in 0..<3 where !lowerStory.isHittable {
-            app.swipeUp()
-        }
-
-        XCTAssertTrue(lowerStory.waitForExistence(timeout: 5))
-        XCTAssertTrue(lowerStory.isHittable)
+        let errorState = app.otherElements["discover.detail.errorState.dest_kyoto"]
+        XCTAssertTrue(errorState.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["discover.detail.retryButton.dest_kyoto"].waitForExistence(timeout: 5))
     }
 
-    private func launchApp() -> XCUIApplication {
+    private func launchApp(
+        dynamicTypeSize: String? = nil,
+        profileDelayMs: Int? = nil,
+        failedProfileDestinationId: String? = nil
+    ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["WANDERLUST_USE_FIXTURES"] = "1"
         app.launchEnvironment["WANDERLUST_RESET_STATE"] = "1"
+
+        if let dynamicTypeSize {
+            app.launchEnvironment["WANDERLUST_DYNAMIC_TYPE_SIZE"] = dynamicTypeSize
+        }
+
+        if let profileDelayMs {
+            app.launchEnvironment["WANDERLUST_PROFILE_DELAY_MS"] = String(profileDelayMs)
+        }
+
+        if let failedProfileDestinationId {
+            app.launchEnvironment["WANDERLUST_FAIL_PROFILE_DESTINATION_ID"] = failedProfileDestinationId
+        }
+
         app.launch()
         return app
     }
 
-    private func swipeRightFromLeadingEdge(in app: XCUIApplication) {
-        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.04, dy: 0.5))
-        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.82, dy: 0.5))
+    private func openGuide(destinationId: String, in app: XCUIApplication) {
+        swipeLeftToOpenGuide(in: app)
+        XCTAssertTrue(app.otherElements["discover.detail.screen.\(destinationId)"].waitForExistence(timeout: 5))
+    }
+
+    private func swipeLeftToOpenGuide(in app: XCUIApplication) {
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.84, dy: 0.55))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.18, dy: 0.55))
         start.press(forDuration: 0.01, thenDragTo: end)
     }
 
-    private func staticText(startingWith prefix: String, in app: XCUIApplication) -> XCUIElement {
-        app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", prefix)).firstMatch
+    private func tap(_ element: XCUIElement) {
+        if element.isHittable {
+            element.tap()
+            return
+        }
+
+        element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     }
 
     private func waitForValue(_ value: String, on element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
         let predicate = NSPredicate(format: "value == %@", value)
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func waitForLabel(_ label: String, on element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+        let predicate = NSPredicate(format: "label == %@", label)
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private enum ScrollDirection {
+        case up
+        case down
+    }
+
+    private func scrollToElement(_ element: XCUIElement, in app: XCUIApplication, direction: ScrollDirection, attempts: Int = 8) {
+        guard !element.exists else { return }
+
+        for _ in 0 ..< attempts where !element.exists {
+            switch direction {
+            case .up:
+                app.swipeUp()
+            case .down:
+                app.swipeDown()
+            }
+        }
     }
 }

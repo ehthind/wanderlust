@@ -157,6 +157,13 @@ struct TripWorkspaceScreen: View {
             ),
             in: RoundedRectangle(cornerRadius: 28, style: .continuous)
         )
+        .background(alignment: .topLeading) {
+            Color.clear
+                .frame(width: 1, height: 1)
+                .allowsHitTesting(false)
+                .accessibilityElement()
+                .accessibilityIdentifier("workspace.selectedStayTitle")
+        }
     }
 
     private func searchResultsSection(_ result: TripStaySearchResult) -> some View {

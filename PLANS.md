@@ -6,6 +6,7 @@ Plans are first-class artifacts in this repository.
 - [0001 Repo scaffold](plans/active/0001-repo-scaffold.md)
 - [0009 Temporal Plan Trip Platform](plans/active/0009-temporal-plan-trip-platform.md)
 - [0013 Native iPhone Stay Availability and Selection](plans/active/0013-native-iphone-stay-availability.md)
+- [0014 Apple-Aligned Discover Guide Rebuild](plans/active/0014-apple-aligned-discover-guide.md)
 
 ## Completed
 - [0002 Symphony execution loop](plans/completed/0002-symphony-execution-loop.md)

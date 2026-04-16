@@ -1,6 +1,17 @@
 import SwiftUI
 import UIKit
 
+private enum DiscoverSharedLayout {
+    static let buttonWidth: CGFloat = 148
+    static let buttonHeight: CGFloat = 52
+    static let buttonHorizontalPadding: CGFloat = 16
+    static let buttonContentSpacing: CGFloat = 10
+    static let buttonCornerRadius: CGFloat = 16
+    static let subtleStrokeWidth: CGFloat = 1
+    static let heroFallbackGradientStartRadius: CGFloat = 40
+    static let heroFallbackGradientEndRadius: CGFloat = 420
+}
+
 struct DiscoverSaveButton: View {
     let isSaved: Bool
     let label: String
@@ -13,7 +24,7 @@ struct DiscoverSaveButton: View {
         isSaved: Bool,
         label: String,
         fontWeight: Font.Weight,
-        width: CGFloat = 148,
+        width: CGFloat = DiscoverSharedLayout.buttonWidth,
         accessibilityIdentifier: String?,
         onTap: @escaping () -> Void
     ) {
@@ -27,7 +38,7 @@ struct DiscoverSaveButton: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 10) {
+            HStack(spacing: DiscoverSharedLayout.buttonContentSpacing) {
                 Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
                     .font(.system(size: 18, weight: fontWeight))
 
@@ -35,9 +46,15 @@ struct DiscoverSaveButton: View {
                     .font(.system(size: 16, weight: fontWeight, design: .default))
             }
             .foregroundStyle(Color.white.opacity(isSaved ? 0.96 : 0.74))
-            .padding(.horizontal, 16)
-            .frame(width: width, height: 52, alignment: .leading)
-            .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(.horizontal, DiscoverSharedLayout.buttonHorizontalPadding)
+            .frame(width: width, height: DiscoverSharedLayout.buttonHeight, alignment: .leading)
+            .background(
+                Color.white.opacity(0.06),
+                in: RoundedRectangle(
+                    cornerRadius: DiscoverSharedLayout.buttonCornerRadius,
+                    style: .continuous
+                )
+            )
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isSaved ? "Saved" : "Save")
@@ -59,7 +76,7 @@ struct DiscoverPlanTripButton: View {
         title: String,
         isPlanning: Bool,
         fontWeight: Font.Weight,
-        width: CGFloat = 148,
+        width: CGFloat = DiscoverSharedLayout.buttonWidth,
         isEnabled: Bool,
         accessibilityIdentifier: String?,
         onTap: @escaping () -> Void
@@ -82,10 +99,13 @@ struct DiscoverPlanTripButton: View {
                 .background(Color.black.opacity(0.01), in: Capsule(style: .continuous))
                 .overlay {
                     Capsule(style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.34), lineWidth: 1)
+                        .strokeBorder(
+                            Color.white.opacity(0.34),
+                            lineWidth: DiscoverSharedLayout.subtleStrokeWidth
+                        )
                 }
         }
-        .frame(width: width, height: 52)
+        .frame(width: width, height: DiscoverSharedLayout.buttonHeight)
         .buttonStyle(.plain)
         .disabled(!isEnabled)
         .accessibilityIdentifier(accessibilityIdentifier ?? "")
@@ -130,8 +150,8 @@ struct DiscoverHeroImage: View {
                             Color.clear
                         ],
                         center: .topLeading,
-                        startRadius: 40,
-                        endRadius: 420
+                        startRadius: DiscoverSharedLayout.heroFallbackGradientStartRadius,
+                        endRadius: DiscoverSharedLayout.heroFallbackGradientEndRadius
                     )
                 )
         }
