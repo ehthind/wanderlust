@@ -3,6 +3,7 @@ import UIKit
 
 private enum DiscoverViewLayout {
     static let cardScrollAnimationDuration = 0.28
+    static let guideDismissSwipeThreshold: CGFloat = 90
     static let errorBannerHorizontalPadding: CGFloat = 16
     static let errorBannerVerticalPadding: CGFloat = 12
     static let errorBannerBottomPadding: CGFloat = 16
@@ -10,9 +11,6 @@ private enum DiscoverViewLayout {
     static let feedContentSpacing: CGFloat = 18
     static let feedHorizontalPadding: CGFloat = 24
     static let feedBodyLineSpacing: CGFloat = 8
-    static let feedGuideSpacing: CGFloat = 8
-    static let feedGuideHorizontalPadding: CGFloat = 14
-    static let feedGuideVerticalPadding: CGFloat = 10
 }
 
 struct DiscoverView: View {
@@ -97,6 +95,19 @@ private struct DiscoverDestinationGuideOverlay: View {
                     }
                 }
         }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 24)
+                .onEnded { value in
+                    guard
+                        value.translation.width >= DiscoverViewLayout.guideDismissSwipeThreshold,
+                        abs(value.translation.width) > abs(value.translation.height)
+                    else {
+                        return
+                    }
+
+                    onClose()
+                }
+        )
     }
 
     @ViewBuilder
@@ -167,9 +178,6 @@ private struct DiscoverFeedSurface: View {
                                     isSaved: viewModel.isSaved(destinationId: card.destination.id),
                                     isCurrent: viewModel.currentCard?.destination.id == card.destination.id,
                                     isPlanning: viewModel.isPlanning && viewModel.currentCard?.destination.id == card.destination.id,
-                                    onOpenDestinationGuide: {
-                                        onOpenDestinationGuide(card.destination.id)
-                                    },
                                     onToggleSaved: {
                                         viewModel.toggleSaved(destinationId: card.destination.id)
                                     },
@@ -249,7 +257,6 @@ private struct DiscoverFeedCard: View {
     let isSaved: Bool
     let isCurrent: Bool
     let isPlanning: Bool
-    let onOpenDestinationGuide: () -> Void
     let onToggleSaved: () -> Void
     let onPlanTrip: () -> Void
 
@@ -281,24 +288,6 @@ private struct DiscoverFeedCard: View {
                         .foregroundStyle(Color.white.opacity(0.86))
                         .lineSpacing(DiscoverViewLayout.feedBodyLineSpacing)
                         .fixedSize(horizontal: false, vertical: true)
-
-                    Button(action: onOpenDestinationGuide) {
-                        HStack(spacing: DiscoverViewLayout.feedGuideSpacing) {
-                            Text("Destination Guide")
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-                            Image(systemName: "chevron.right")
-                                .font(.system(.footnote, design: .rounded).weight(.bold))
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, DiscoverViewLayout.feedGuideHorizontalPadding)
-                        .padding(.vertical, DiscoverViewLayout.feedGuideVerticalPadding)
-                        .background(.ultraThinMaterial, in: Capsule(style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Destination Guide")
-                    .accessibilityIdentifier("discover.card.open.\(card.destination.id)")
 
                     HStack(alignment: .center) {
                         saveButton

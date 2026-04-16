@@ -2,7 +2,30 @@ import XCTest
 
 @MainActor
 final class WanderlustUITests: XCTestCase {
-    func testDiscoverDestinationGuidePushesAndReturnsToSameFeedCard() {
+    func testDiscoverDestinationGuideSwipesInAndOutOnSameFeedCard() {
+        let app = launchApp()
+
+        let parisCard = app.otherElements["discover.card.dest_paris"]
+        XCTAssertTrue(parisCard.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["discover.card.open.dest_paris"].exists)
+
+        app.swipeUp()
+
+        let kyotoCard = app.otherElements["discover.card.dest_kyoto"]
+        XCTAssertTrue(kyotoCard.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForValue("current", on: kyotoCard))
+        XCTAssertFalse(app.buttons["discover.card.open.dest_kyoto"].exists)
+
+        openGuide(destinationId: "dest_kyoto", in: app)
+        XCTAssertTrue(app.tabBars.buttons["Discover"].waitForExistence(timeout: 5))
+
+        swipeRightToCloseGuide(in: app)
+
+        XCTAssertTrue(kyotoCard.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForValue("current", on: kyotoCard))
+    }
+
+    func testDiscoverDestinationGuideBackButtonReturnsToSameFeedCard() {
         let app = launchApp()
 
         let parisCard = app.otherElements["discover.card.dest_paris"]
@@ -15,7 +38,6 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertTrue(waitForValue("current", on: kyotoCard))
 
         openGuide(destinationId: "dest_kyoto", in: app)
-        XCTAssertTrue(app.tabBars.buttons["Discover"].waitForExistence(timeout: 5))
 
         let backButton = app.buttons["discover.detail.backButton"]
         XCTAssertTrue(backButton.waitForExistence(timeout: 5))
@@ -168,6 +190,12 @@ final class WanderlustUITests: XCTestCase {
     private func swipeLeftToOpenGuide(in app: XCUIApplication) {
         let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.84, dy: 0.55))
         let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.18, dy: 0.55))
+        start.press(forDuration: 0.01, thenDragTo: end)
+    }
+
+    private func swipeRightToCloseGuide(in app: XCUIApplication) {
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.18, dy: 0.55))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.84, dy: 0.55))
         start.press(forDuration: 0.01, thenDragTo: end)
     }
 

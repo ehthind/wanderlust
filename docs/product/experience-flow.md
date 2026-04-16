@@ -13,4 +13,4 @@ Wanderlust should feel editorial first and practical second, with the iPhone app
 - Search
 - Inbox
 
-The current Discover implementation is a full-screen vertical feed on iPhone with local save state and curated destination cards that immediately route into trip planning. A left swipe on the active feed card opens the destination guide for that city while keeping the root tab chrome visible. The guide itself uses a standard top bar for back/save and a single bottom `Plan Trip` action instead of a hidden-tab adjacent surface.
+The current Discover implementation is a full-screen vertical feed on iPhone with local save state and curated destination cards that immediately route into trip planning. A left swipe on the active feed card opens the destination guide for that city while keeping the root tab chrome visible and avoiding a visible feed CTA. The guide itself uses a standard top bar for back/save, supports a right swipe back into Discover, and keeps a single bottom `Plan Trip` action instead of a hidden-tab adjacent surface.

@@ -16,6 +16,7 @@ Native SwiftUI iPhone client for the Discover -> Plan Trip -> Stay Selection flo
 ## UI debugging
 - Use Xcode Environment Overrides before touching layout constants. `WANDERLUST_DYNAMIC_TYPE_SIZE` accepts `xSmall`, `small`, `medium`, `large`, `xLarge`, `xxLarge`, `xxxLarge`, or `accessibility1` through `accessibility5`.
 - Use `WANDERLUST_PROFILE_DELAY_MS` and `WANDERLUST_FAIL_PROFILE_DESTINATION_ID` with fixtures to hold loading states open or force a destination-guide failure.
+- Validate Discover gesture behavior explicitly: left swipe into the destination guide, right swipe back out, and no visible feed CTA.
 - Inspect spacing and clipping with Xcode Debug View Hierarchy before changing padding or safe-area insets.
 - Run Accessibility Inspector against the destination guide after layout changes, especially after Dynamic Type or toolbar updates.
 - See [`docs/runbooks/ios-ui-debugging.md`](../../docs/runbooks/ios-ui-debugging.md) for the full workflow.
