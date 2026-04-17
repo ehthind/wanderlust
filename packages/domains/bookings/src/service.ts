@@ -11,9 +11,10 @@ import type {
   LodgingOfferSummary,
   TripStaySearchInput,
   TripStaySearchResult,
-  TripWorkspace,
 } from "@wanderlust/shared-schemas";
 
+import { loadTripWorkspaceById, updateTripWorkspace } from "../../trips/src/repo";
+import type { TripWorkspace } from "../../trips/src/types";
 import {
   bookingRail,
   maxAvailabilityPropertyIds,
@@ -27,7 +28,6 @@ import {
   upsertSelectedStay,
 } from "./repo";
 import type { DestinationInventorySource, SelectedStay } from "./types";
-import { loadTripWorkspaceById, updateTripWorkspace } from "../../trips/src/repo";
 
 const logger = createLogger("bookings.service", {
   includeTrace: true,
@@ -106,7 +106,14 @@ export const buildCandidateDateWindows = (
   travelMonth: string,
   tripNights: number,
 ): CandidateDateWindow[] => {
-  const [year, month] = travelMonth.split("-").map(Number);
+  const [yearPart, monthPart] = travelMonth.split("-").map(Number);
+  const year = yearPart ?? Number.NaN;
+  const month = monthPart ?? Number.NaN;
+
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return [];
+  }
+
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
   const windows: CandidateDateWindow[] = [];
 
@@ -241,10 +248,7 @@ export const createBookingService = ({
   ): Promise<TripStaySearchResult> {
     const tripDraft = await loadTripWorkspace(tripDraftId);
     if (!tripDraft) {
-      throw new BookingServiceError(
-        "trip_not_found",
-        `Trip draft ${tripDraftId} was not found.`,
-      );
+      throw new BookingServiceError("trip_not_found", `Trip draft ${tripDraftId} was not found.`);
     }
 
     const destination = await loadDestinationSource(tripDraft.destinationId);
@@ -343,10 +347,7 @@ export const createBookingService = ({
   async selectTripStay(tripDraftId: string, offer: LodgingOfferSummary): Promise<SelectedStay> {
     const tripDraft = await loadTripWorkspace(tripDraftId);
     if (!tripDraft) {
-      throw new BookingServiceError(
-        "trip_not_found",
-        `Trip draft ${tripDraftId} was not found.`,
-      );
+      throw new BookingServiceError("trip_not_found", `Trip draft ${tripDraftId} was not found.`);
     }
 
     const selectedStay = await saveSelectedStay({

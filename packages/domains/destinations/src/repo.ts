@@ -1,9 +1,9 @@
+import { createLogger } from "@wanderlust/shared-logging";
 import type {
   DestinationProfileDetail,
   DestinationProfileStoryCard,
   DestinationSummary,
 } from "@wanderlust/shared-schemas";
-import { createLogger } from "@wanderlust/shared-logging";
 
 import { discoverDestinationIds, featuredDestinationId } from "./config";
 import type { DestinationProfile } from "./types";
@@ -12,9 +12,7 @@ const logger = createLogger("destinations.repo", {
   includeTrace: true,
 });
 
-const createDetails = (
-  destination: DestinationSummary,
-): DestinationProfileDetail[] => [
+const createDetails = (destination: DestinationSummary): DestinationProfileDetail[] => [
   { label: "Best season", value: destination.bestSeason },
   { label: "Budget", value: destination.budget },
   { label: "Visa", value: destination.visa },
@@ -130,7 +128,8 @@ const discoverDestinationProfiles: DestinationProfile[] = [
       slug: "kyoto",
       city: "Kyoto",
       country: "Japan",
-      thesis: "Go for temple mornings, quiet lanes, and a city that rewards moving slower than your itinerary.",
+      thesis:
+        "Go for temple mornings, quiet lanes, and a city that rewards moving slower than your itinerary.",
       bestSeason: "Mar-May",
       budget: "$$-$$$",
       visa: "Visa-free",
@@ -144,7 +143,8 @@ const discoverDestinationProfiles: DestinationProfile[] = [
       slug: "kyoto",
       city: "Kyoto",
       country: "Japan",
-      thesis: "Go for temple mornings, quiet lanes, and a city that rewards moving slower than your itinerary.",
+      thesis:
+        "Go for temple mornings, quiet lanes, and a city that rewards moving slower than your itinerary.",
       bestSeason: "Mar-May",
       budget: "$$-$$$",
       visa: "Visa-free",
@@ -218,28 +218,32 @@ const discoverDestinationProfiles: DestinationProfile[] = [
       slug: "mexico-city",
       city: "Mexico City",
       country: "Mexico",
-      thesis: "Go for design energy, serious food, and neighborhoods that make a long weekend feel much larger.",
+      thesis:
+        "Go for design energy, serious food, and neighborhoods that make a long weekend feel much larger.",
       bestSeason: "Oct-Apr",
       budget: "$$",
       visa: "Visa-free",
       idealTripLength: "4-5 days",
       heroImageUrl:
         "https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=1600&q=80",
-      heroImageAccessibilityLabel: "Mexico City skyline at golden hour with mountains in the distance",
+      heroImageAccessibilityLabel:
+        "Mexico City skyline at golden hour with mountains in the distance",
     },
     details: createDetails({
       id: discoverDestinationIds[2],
       slug: "mexico-city",
       city: "Mexico City",
       country: "Mexico",
-      thesis: "Go for design energy, serious food, and neighborhoods that make a long weekend feel much larger.",
+      thesis:
+        "Go for design energy, serious food, and neighborhoods that make a long weekend feel much larger.",
       bestSeason: "Oct-Apr",
       budget: "$$",
       visa: "Visa-free",
       idealTripLength: "4-5 days",
       heroImageUrl:
         "https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=1600&q=80",
-      heroImageAccessibilityLabel: "Mexico City skyline at golden hour with mountains in the distance",
+      heroImageAccessibilityLabel:
+        "Mexico City skyline at golden hour with mountains in the distance",
     }),
     stories: [
       createStory(
@@ -331,10 +335,16 @@ export const getFeaturedDestination = (): DestinationSummary => {
     destinationId: featuredDestinationId,
   });
 
-  return cloneDestinationSummary(
-    discoverDestinationProfiles.find((profile) => profile.destination.id === featuredDestinationId)
-      ?.destination ?? discoverDestinationProfiles[0]!.destination,
-  );
+  const featuredProfile =
+    discoverDestinationProfiles.find(
+      (profile) => profile.destination.id === featuredDestinationId,
+    ) ?? discoverDestinationProfiles[0];
+
+  if (!featuredProfile) {
+    throw new Error("Discover destination profiles are not configured.");
+  }
+
+  return cloneDestinationSummary(featuredProfile.destination);
 };
 
 export const getDestinationProfile = (destinationId: string): DestinationProfile | null => {

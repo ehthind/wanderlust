@@ -1,9 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  buildExpediaRapidAuthorizationHeader,
-  createExpediaRapidBookingProvider,
-} from "./index";
+import { buildExpediaRapidAuthorizationHeader, createExpediaRapidBookingProvider } from "./index";
 
 describe("expedia rapid provider", () => {
   it("builds the official signature-auth header format", () => {

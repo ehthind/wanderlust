@@ -4,11 +4,11 @@ import type { BookingProvider } from "@wanderlust/providers/booking";
 import type { LodgingOfferSummary, TripDraft } from "@wanderlust/shared-schemas";
 
 import {
-  BookingServiceError,
+  type BookingServiceError,
   buildCandidateDateWindows,
   createBookingService,
   rankStayOffers,
-} from "./service";
+} from "./src/service";
 
 const buildTripDraft = (overrides: Partial<TripDraft> = {}): TripDraft => ({
   id: "trip_123",
@@ -131,44 +131,42 @@ describe("bookings service", () => {
           amenities: ["Spa"],
         },
       }),
-      searchAvailability: vi
-        .fn()
-        .mockResolvedValue([
-          {
-            propertyId: "property_1",
-            offers: [
-              {
-                roomId: "room_1",
-                rateId: "rate_1",
-                roomName: "Cosy Room",
-                totalPrice: 240,
-                nightlyPrice: 80,
-                currency: "USD",
-                cancellationSummary: "Non-refundable",
-                currentRefundability: "non_refundable",
-                propertyScore: null,
-                rawOffer: {},
-              },
-            ],
-          },
-          {
-            propertyId: "property_2",
-            offers: [
-              {
-                roomId: "room_2",
-                rateId: "rate_2",
-                roomName: "River Suite",
-                totalPrice: 230,
-                nightlyPrice: 76.67,
-                currency: "USD",
-                cancellationSummary: "Partially refundable",
-                currentRefundability: "partially_refundable",
-                propertyScore: null,
-                rawOffer: {},
-              },
-            ],
-          },
-        ]),
+      searchAvailability: vi.fn().mockResolvedValue([
+        {
+          propertyId: "property_1",
+          offers: [
+            {
+              roomId: "room_1",
+              rateId: "rate_1",
+              roomName: "Cosy Room",
+              totalPrice: 240,
+              nightlyPrice: 80,
+              currency: "USD",
+              cancellationSummary: "Non-refundable",
+              currentRefundability: "non_refundable",
+              propertyScore: null,
+              rawOffer: {},
+            },
+          ],
+        },
+        {
+          propertyId: "property_2",
+          offers: [
+            {
+              roomId: "room_2",
+              rateId: "rate_2",
+              roomName: "River Suite",
+              totalPrice: 230,
+              nightlyPrice: 76.67,
+              currency: "USD",
+              cancellationSummary: "Partially refundable",
+              currentRefundability: "partially_refundable",
+              propertyScore: null,
+              rawOffer: {},
+            },
+          ],
+        },
+      ]),
     };
     const updateTrip = vi.fn().mockResolvedValue(buildTripDraft());
     const service = createBookingService({

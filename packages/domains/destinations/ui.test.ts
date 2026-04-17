@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getDestinationProfileView, getDiscoverCardView, getDiscoverFeedView } from "./ui";
+import { getDestinationProfileView, getDiscoverCardView, getDiscoverFeedView } from "./src/ui";
 
 describe("discover feed view", () => {
   it("returns three discover cards in editorial order", () => {
