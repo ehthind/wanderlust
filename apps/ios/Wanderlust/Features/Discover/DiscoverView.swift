@@ -18,6 +18,7 @@ struct DiscoverView: View {
     @StateObject private var viewModel: DiscoverViewModel
     @State private var feedScrollTarget: String?
     @State private var activeDestinationId: String?
+    @State private var displayedDestinationId: String?
 
     init(appState: AppState) {
         self.appState = appState
@@ -33,19 +34,20 @@ struct DiscoverView: View {
     var body: some View {
         GeometryReader { proxy in
             let pageWidth = min(proxy.size.width, UIScreen.main.bounds.width)
-            let pageSize = CGSize(width: pageWidth, height: proxy.size.height)
             let feedCardBottomInset = proxy.safeAreaInsets.bottom
+            let pageSize = CGSize(width: pageWidth, height: proxy.size.height)
 
-            DiscoverFeedSurface(
-                viewModel: viewModel,
-                pageSize: pageSize,
-                feedCardBottomInset: feedCardBottomInset,
-                scrollTarget: $feedScrollTarget,
-                onOpenDestinationGuide: openDestinationGuide
-            )
-            .frame(width: pageSize.width, height: pageSize.height)
-            .background(Color.black)
-            .overlay {
+            ZStack(alignment: .top) {
+                DiscoverFeedSurface(
+                    viewModel: viewModel,
+                    pageSize: pageSize,
+                    feedCardBottomInset: feedCardBottomInset,
+                    displayedDestinationId: $displayedDestinationId,
+                    scrollTarget: $feedScrollTarget,
+                    onOpenDestinationGuide: openDestinationGuide
+                )
+                .frame(width: pageSize.width, height: pageSize.height, alignment: .top)
+
                 if let activeDestinationId {
                     DiscoverDestinationGuideOverlay(
                         destinationId: activeDestinationId,
@@ -56,12 +58,18 @@ struct DiscoverView: View {
                     .zIndex(1)
                 }
             }
+            .frame(width: pageSize.width, height: pageSize.height, alignment: .top)
+            .background(Color.black)
         }
         .background(Color.black.ignoresSafeArea())
         .animation(.easeInOut(duration: DiscoverViewLayout.cardScrollAnimationDuration), value: activeDestinationId)
+        .toolbar(.visible, for: .tabBar)
+        .toolbarBackground(.hidden, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
         .task {
             await viewModel.loadIfNeeded()
             feedScrollTarget = viewModel.currentCard?.destination.id
+            displayedDestinationId = viewModel.currentCard?.destination.id
         }
     }
 
@@ -154,6 +162,7 @@ private struct DiscoverFeedSurface: View {
     @ObservedObject var viewModel: DiscoverViewModel
     let pageSize: CGSize
     let feedCardBottomInset: CGFloat
+    @Binding var displayedDestinationId: String?
     @Binding var scrollTarget: String?
     let onOpenDestinationGuide: (String) -> Void
 
@@ -177,12 +186,10 @@ private struct DiscoverFeedSurface: View {
                             ForEach(viewModel.cards) { card in
                                 DiscoverFeedCard(
                                     card: card,
-                                    pageSize: CGSize(
-                                        width: pageSize.width,
-                                        height: pageSize.height + feedCardBottomInset
-                                    ),
+                                    pageSize: pageSize,
                                     bottomContentInset: feedCardBottomInset,
                                     isSaved: viewModel.isSaved(destinationId: card.destination.id),
+                                    isDisplayed: displayedDestinationId == card.destination.id,
                                     isCurrent: viewModel.currentCard?.destination.id == card.destination.id,
                                     isPlanning: viewModel.isPlanning && viewModel.currentCard?.destination.id == card.destination.id,
                                     onToggleSaved: {
@@ -240,7 +247,7 @@ private struct DiscoverFeedSurface: View {
                     .padding(.horizontal, DiscoverViewLayout.errorBannerHorizontalPadding)
                     .padding(.vertical, DiscoverViewLayout.errorBannerVerticalPadding)
                     .background(Color.black.opacity(0.72), in: Capsule())
-                .padding(.bottom, DiscoverViewLayout.errorBannerBottomPadding)
+                    .padding(.bottom, DiscoverViewLayout.errorBannerBottomPadding + feedCardBottomInset)
             }
         }
     }
@@ -255,6 +262,15 @@ private struct DiscoverFeedSurface: View {
         let destinationId = viewModel.cards[nextIndex].destination.id
         viewModel.setCurrentCard(destinationId: destinationId)
         scrollTarget = destinationId
+
+        Task { @MainActor in
+            try? await Task.sleep(
+                nanoseconds: UInt64(DiscoverViewLayout.cardScrollAnimationDuration * 1_000_000_000)
+            )
+
+            guard scrollTarget == destinationId else { return }
+            displayedDestinationId = destinationId
+        }
     }
 }
 
@@ -263,14 +279,20 @@ private struct DiscoverFeedCard: View {
     let pageSize: CGSize
     let bottomContentInset: CGFloat
     let isSaved: Bool
+    let isDisplayed: Bool
     let isCurrent: Bool
     let isPlanning: Bool
     let onToggleSaved: () -> Void
     let onPlanTrip: () -> Void
 
+    private var artworkHeight: CGFloat {
+        pageSize.height + (isDisplayed ? bottomContentInset : 0)
+    }
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             DiscoverHeroImage(destination: card.destination)
+                .frame(width: pageSize.width, height: artworkHeight, alignment: .top)
 
             LinearGradient(
                 colors: [
@@ -282,6 +304,7 @@ private struct DiscoverFeedCard: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
+            .frame(width: pageSize.width, height: artworkHeight, alignment: .top)
 
             VStack(alignment: .leading, spacing: 0) {
                 Spacer()
@@ -315,7 +338,7 @@ private struct DiscoverFeedCard: View {
             )
         }
         .frame(width: pageSize.width, height: pageSize.height, alignment: .topLeading)
-        .clipped()
+        .zIndex(isDisplayed ? 1 : 0)
         .background(alignment: .topLeading) {
             Color.clear
                 .frame(width: 1, height: 1)

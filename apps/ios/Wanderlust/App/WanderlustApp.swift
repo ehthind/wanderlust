@@ -1,8 +1,13 @@
 import SwiftUI
+import UIKit
 
 @main
 struct WanderlustApp: App {
     @StateObject private var appState = AppState()
+
+    init() {
+        configureTabBarAppearance()
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -52,5 +57,12 @@ struct WanderlustApp: App {
         default:
             return nil
         }
+    }
+
+    private func configureTabBarAppearance() {
+        let tabBar = UITabBar.appearance()
+        tabBar.itemPositioning = .centered
+        tabBar.itemWidth = 68
+        tabBar.itemSpacing = 12
     }
 }

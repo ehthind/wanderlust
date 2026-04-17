@@ -15,6 +15,10 @@ Native SwiftUI iPhone client for the Discover -> Plan Trip -> Stay Selection flo
 
 ## UI debugging
 - Use Xcode Environment Overrides before touching layout constants. `WANDERLUST_DYNAMIC_TYPE_SIZE` accepts `xSmall`, `small`, `medium`, `large`, `xLarge`, `xxLarge`, `xxxLarge`, or `accessibility1` through `accessibility5`.
+- Use Xcode’s built-in alignment overlay when you need the red layout guides: `Debug > View Debugging > Show Alignment Rectangles`.
+- When a screen shows a bottom gap or tab-bar artifact, inspect the tab bar background and safe-area container ownership before changing page heights, card frames, or bottom padding.
+- Keep vertical paging math tied to the visible viewport. Do not enlarge page height just to paint behind the tab bar; that risks card bleed and broken snap alignment.
+- Prefer system tab bar styling over custom bars or in-app debug overlays when the issue is visual composition behind the bar.
 - Use `WANDERLUST_PROFILE_DELAY_MS` and `WANDERLUST_FAIL_PROFILE_DESTINATION_ID` with fixtures to hold loading states open or force a destination-guide failure.
 - Validate Discover gesture behavior explicitly: left swipe into the destination guide, right swipe back out, and no visible feed CTA.
 - Inspect spacing and clipping with Xcode Debug View Hierarchy before changing padding or safe-area insets.
