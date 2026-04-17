@@ -1,5 +1,5 @@
-import { createSupabaseAdminRequest } from "@wanderlust/shared-supabase";
 import type { LodgingOfferSummary, TripSelectedStay } from "@wanderlust/shared-schemas";
+import { createSupabaseAdminRequest } from "@wanderlust/shared-supabase";
 
 import type { DestinationInventorySource } from "./types";
 
@@ -88,7 +88,9 @@ export const loadDestinationInventorySource = async (
   return row ? mapDestinationInventorySource(row) : null;
 };
 
-export const loadSelectedStayByTripId = async (tripDraftId: string): Promise<TripSelectedStay | null> => {
+export const loadSelectedStayByTripId = async (
+  tripDraftId: string,
+): Promise<TripSelectedStay | null> => {
   const rows = (await createSupabaseAdminRequest({
     table: "trip_selected_stays",
     query: new URLSearchParams({

@@ -284,22 +284,36 @@ final class DiscoverViewModelTests: XCTestCase {
     }
 
     @MainActor
-    func testAppStateResetsDiscoverSurfaceWhenLeavingDiscover() async {
-        let appState = AppState(
-            environment: .init(baseURL: URL(string: "https://example.test")!, useFixtures: true),
-            api: MockAPI(),
-            lastTripStore: InMemoryLastTripStore(),
+    func testLoadDestinationProfileIfNeededPopulatesRequestedDestination() async {
+        let api = MockAPI()
+        let viewModel = DiscoverViewModel(
+            api: api,
+            onTripCreated: { _ in },
             savedDestinationsStore: MockSavedDestinationsStore()
         )
 
-        appState.discoverSurface = .profile
-        appState.selectedTab = .trips
-        XCTAssertEqual(appState.discoverSurface, .feed)
+        await viewModel.loadIfNeeded()
+        await viewModel.loadDestinationProfileIfNeeded(destinationId: "dest_kyoto")
 
-        appState.discoverSurface = .profile
+        XCTAssertEqual(viewModel.destinationProfile(destinationId: "dest_kyoto")?.destination.id, "dest_kyoto")
+        XCTAssertNil(viewModel.profileError(destinationId: "dest_kyoto"))
+    }
+
+    @MainActor
+    func testAppStateOpenTripSelectsTripsTabAndStoresDraftId() async {
+        let lastTripStore = InMemoryLastTripStore()
+        let appState = AppState(
+            environment: .init(baseURL: URL(string: "https://example.test")!, useFixtures: true),
+            api: MockAPI(),
+            lastTripStore: lastTripStore,
+            savedDestinationsStore: MockSavedDestinationsStore()
+        )
+
         appState.openTrip("trip_dest_paris")
+
         XCTAssertEqual(appState.selectedTab, .trips)
-        XCTAssertEqual(appState.discoverSurface, .feed)
+        XCTAssertEqual(appState.activeTripDraftId, "trip_dest_paris")
+        XCTAssertEqual(lastTripStore.loadTripDraftId(), "trip_dest_paris")
     }
 }
 

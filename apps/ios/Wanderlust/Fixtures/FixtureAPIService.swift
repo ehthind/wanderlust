@@ -2,6 +2,8 @@ import Foundation
 
 @MainActor
 final class FixtureAPIService: WanderlustAPI {
+    private let processInfo = ProcessInfo.processInfo
+
     private let destinations: [DestinationSummary] = [
         DestinationSummary(
             id: "dest_paris",
@@ -313,6 +315,17 @@ final class FixtureAPIService: WanderlustAPI {
     }
 
     func fetchDestinationProfile(destinationId: String) async throws -> DestinationProfileView {
+        if let delay = profileDelayNanoseconds {
+            try await Task.sleep(nanoseconds: delay)
+        }
+
+        if failedProfileDestinationId == destinationId {
+            throw APIClientError.server(
+                statusCode: 503,
+                message: "Destination guide fixtures are unavailable for \(destinationId)."
+            )
+        }
+
         guard let profile = profiles[destinationId] else {
             throw APIClientError.server(statusCode: 404, message: "Destination \(destinationId) was not found.")
         }
@@ -406,6 +419,22 @@ final class FixtureAPIService: WanderlustAPI {
 
     private func slug(for destinationId: String) -> String {
         feed.cards.first(where: { $0.destination.id == destinationId })?.destination.slug ?? "paris"
+    }
+
+    private var profileDelayNanoseconds: UInt64? {
+        guard
+            let rawValue = processInfo.environment["WANDERLUST_PROFILE_DELAY_MS"],
+            let milliseconds = UInt64(rawValue),
+            milliseconds > 0
+        else {
+            return nil
+        }
+
+        return milliseconds * 1_000_000
+    }
+
+    private var failedProfileDestinationId: String? {
+        processInfo.environment["WANDERLUST_FAIL_PROFILE_DESTINATION_ID"]
     }
 
     private func planSummary(for destinationId: String) -> String {

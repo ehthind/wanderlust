@@ -12,8 +12,10 @@
 		1B8587971C5FC769287B4C72 /* DiscoverViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 567D0969EF0BEB58238E5FB0 /* DiscoverViewModel.swift */; };
 		2180A68897362DBF683B50ED /* SavedDestinationsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703F08342B507811BF8490E8 /* SavedDestinationsStore.swift */; };
 		38852CDEBA78D79745EADA1F /* TripWorkspaceScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 647EB3D248665F85AE7CA793 /* TripWorkspaceScreen.swift */; };
+		4661CEECC16B872A2857F609 /* DiscoverDestinationDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBFCE9A983FC99404EEFCCBA /* DiscoverDestinationDetailScreen.swift */; };
 		4B7092ABE0FA55BC61B36A26 /* FixtureAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87735EB5EF619A9917EF9A38 /* FixtureAPIService.swift */; };
 		84131FE440C8D849E1A714BF /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1107961B08BD0A76BD43F166 /* DiscoverView.swift */; };
+		A4E750E0ECFACF9F2D1EDEA7 /* DiscoverSharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 192ACE338B77F66FF529E17C /* DiscoverSharedComponents.swift */; };
 		A7B31FA64B747841BEA89C7C /* WanderlustApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D7D3D425A047B7EE2F0B0AB /* WanderlustApp.swift */; };
 		AEEB57CB1586327E388A77FC /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F78C0FA573250401B83D853F /* APIClient.swift */; };
 		B08D9C6E0F55217B9252BEB4 /* SavedDestinationsStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECEF5C5CF43F0320C9B1007 /* SavedDestinationsStoreTests.swift */; };
@@ -54,6 +56,7 @@
 		1107961B08BD0A76BD43F166 /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
 		129F7B32D01B65C63D3899DA /* TripsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripsRootView.swift; sourceTree = "<group>"; };
 		1672BE57D416FB04E13494A6 /* LastTripStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastTripStore.swift; sourceTree = "<group>"; };
+		192ACE338B77F66FF529E17C /* DiscoverSharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverSharedComponents.swift; sourceTree = "<group>"; };
 		1C4EE4B48F701934923C710B /* TripWorkspaceViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripWorkspaceViewModelTests.swift; sourceTree = "<group>"; };
 		1F97E3B018D8F0487E8C394B /* WanderlustAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WanderlustAPI.swift; sourceTree = "<group>"; };
 		20D996785BBD925F81F7621C /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -75,6 +78,7 @@
 		D2100BAE69DEFD1EE81F5D5B /* DiscoverViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModelTests.swift; sourceTree = "<group>"; };
 		E04B36972AEABBAEDCA221EE /* WanderlustTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WanderlustTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F78C0FA573250401B83D853F /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		FBFCE9A983FC99404EEFCCBA /* DiscoverDestinationDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverDestinationDetailScreen.swift; sourceTree = "<group>"; };
 		FC9BDDF79FE6DDD3BC7A0C9A /* WanderlustUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WanderlustUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -182,6 +186,8 @@
 		D1EA2EF33011282EE6718444 /* Discover */ = {
 			isa = PBXGroup;
 			children = (
+				FBFCE9A983FC99404EEFCCBA /* DiscoverDestinationDetailScreen.swift */,
+				192ACE338B77F66FF529E17C /* DiscoverSharedComponents.swift */,
 				1107961B08BD0A76BD43F166 /* DiscoverView.swift */,
 				567D0969EF0BEB58238E5FB0 /* DiscoverViewModel.swift */,
 			);
@@ -338,6 +344,8 @@
 				E250DD87B722C3EBBF741F82 /* AppEnvironment.swift in Sources */,
 				DB8A8EF2A3B628AB6D77AF9B /* AppState.swift in Sources */,
 				E7F60F00DBA130775390DFA0 /* Contracts.swift in Sources */,
+				4661CEECC16B872A2857F609 /* DiscoverDestinationDetailScreen.swift in Sources */,
+				A4E750E0ECFACF9F2D1EDEA7 /* DiscoverSharedComponents.swift in Sources */,
 				84131FE440C8D849E1A714BF /* DiscoverView.swift in Sources */,
 				1B8587971C5FC769287B4C72 /* DiscoverViewModel.swift in Sources */,
 				4B7092ABE0FA55BC61B36A26 /* FixtureAPIService.swift in Sources */,

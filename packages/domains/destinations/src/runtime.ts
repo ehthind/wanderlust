@@ -1,7 +1,11 @@
 import { createLogger } from "@wanderlust/shared-logging";
 import { buildMetricEvent } from "@wanderlust/shared-observability";
 
-import { loadDestinationProfile, loadDiscoverDestination, loadDiscoverDestinations } from "./service";
+import {
+  loadDestinationProfile,
+  loadDiscoverDestination,
+  loadDiscoverDestinations,
+} from "./service";
 
 const logger = createLogger("destinations.runtime", {
   includeTrace: true,

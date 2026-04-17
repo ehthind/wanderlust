@@ -43,6 +43,14 @@ final class DiscoverViewModel: ObservableObject {
         return destinationProfiles[destinationId]
     }
 
+    func destination(destinationId: String) -> DestinationSummary? {
+        cards.first(where: { $0.destination.id == destinationId })?.destination
+    }
+
+    func destinationProfile(destinationId: String) -> DestinationProfileView? {
+        destinationProfiles[destinationId]
+    }
+
     func loadIfNeeded() async {
         guard !hasLoaded else { return }
         hasLoaded = true
@@ -117,16 +125,27 @@ final class DiscoverViewModel: ObservableObject {
         await loadDestinationProfile(destinationId: destinationId, force: true)
     }
 
-    func planTrip() async {
-        guard let currentCard else { return }
+    func loadDestinationProfileIfNeeded(destinationId: String) async {
+        await loadDestinationProfile(destinationId: destinationId, force: false)
+    }
 
+    func retryDestinationProfile(destinationId: String) async {
+        await loadDestinationProfile(destinationId: destinationId, force: true)
+    }
+
+    func planTrip() async {
+        guard let destinationId = currentCard?.destination.id else { return }
+        await planTrip(destinationId: destinationId)
+    }
+
+    func planTrip(destinationId: String) async {
         isPlanning = true
         defer { isPlanning = false }
 
         do {
             let response = try await api.planTrip(
                 PlanTripInput(
-                    destinationId: currentCard.destination.id,
+                    destinationId: destinationId,
                     travelerCount: 2,
                     vibe: "romantic",
                     budgetStyle: .balanced
