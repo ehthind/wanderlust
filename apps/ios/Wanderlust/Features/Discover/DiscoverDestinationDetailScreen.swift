@@ -18,6 +18,7 @@ private enum DiscoverDestinationDetailLayout {
     static let storyTextSpacing: CGFloat = 10
     static let toolbarIconSize: CGFloat = 18
     static let actionPadding: CGFloat = 12
+    static let actionBottomPaddingWithoutShell: CGFloat = 40
     static let buttonCornerRadius: CGFloat = 18
     static let borderWidth: CGFloat = 1
 }
@@ -29,6 +30,7 @@ struct DiscoverDestinationDetailScreen: View {
     let profileErrorMessage: String?
     let isSaved: Bool
     let isPlanning: Bool
+    let showsBottomShell: Bool
     let onToggleSaved: () -> Void
     let onPlanTrip: () -> Void
     let onRetry: () -> Void
@@ -75,9 +77,14 @@ struct DiscoverDestinationDetailScreen: View {
             bottomActionBar
                 .padding(
                     .bottom,
-                    bottomShellMetrics.contentInset
-                        + bottomShellMetrics.shellHeight
-                        + bottomShellMetrics.bottomPadding
+                    showsBottomShell
+                        ? bottomShellMetrics.contentInset
+                            + bottomShellMetrics.shellHeight
+                            + bottomShellMetrics.bottomPadding
+                        : max(
+                            DiscoverDestinationDetailLayout.actionBottomPaddingWithoutShell,
+                            bottomShellMetrics.bottomPadding
+                        )
                 )
         }
         .background(alignment: .topLeading) {
@@ -541,6 +548,7 @@ struct DiscoverDestinationDetailScreen_Previews: PreviewProvider {
                 profileErrorMessage: nil,
                 isSaved: isSaved,
                 isPlanning: false,
+                showsBottomShell: false,
                 onToggleSaved: {},
                 onPlanTrip: {},
                 onRetry: {}

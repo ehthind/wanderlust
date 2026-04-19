@@ -19,10 +19,12 @@ struct DiscoverView: View {
     @State private var feedScrollTarget: String?
     @State private var activeDestinationId: String?
     @State private var displayedDestinationId: String?
+    @Binding private var isGuidePresented: Bool
     @Environment(\.wanderlustBottomShellMetrics) private var bottomShellMetrics
 
-    init(appState: AppState) {
+    init(appState: AppState, isGuidePresented: Binding<Bool>) {
         self.appState = appState
+        _isGuidePresented = isGuidePresented
         _viewModel = StateObject(
             wrappedValue: DiscoverViewModel(
                 api: appState.api,
@@ -71,6 +73,12 @@ struct DiscoverView: View {
             await viewModel.loadIfNeeded()
             feedScrollTarget = viewModel.currentCard?.destination.id
             displayedDestinationId = viewModel.currentCard?.destination.id
+        }
+        .onAppear {
+            isGuidePresented = activeDestinationId != nil
+        }
+        .onChange(of: activeDestinationId) { _, newValue in
+            isGuidePresented = newValue != nil
         }
     }
 
@@ -131,6 +139,7 @@ private struct DiscoverDestinationGuideOverlay: View {
                 profileErrorMessage: viewModel.profileError(destinationId: destinationId),
                 isSaved: viewModel.isSaved(destinationId: destinationId),
                 isPlanning: viewModel.isPlanning && viewModel.currentCard?.destination.id == destinationId,
+                showsBottomShell: false,
                 onToggleSaved: {
                     viewModel.toggleSaved(destinationId: destinationId)
                 },
@@ -376,9 +385,10 @@ private struct DiscoverPreviewContainer: View {
         lastTripStore: DiscoverPreviewLastTripStore(),
         savedDestinationsStore: DiscoverPreviewSavedDestinationsStore()
     )
+    @State private var isGuidePresented = false
 
     var body: some View {
-        DiscoverView(appState: appState)
+        DiscoverView(appState: appState, isGuidePresented: $isGuidePresented)
     }
 }
 
