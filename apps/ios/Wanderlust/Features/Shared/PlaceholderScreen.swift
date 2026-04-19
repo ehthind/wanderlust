@@ -5,6 +5,8 @@ struct PlaceholderScreen: View {
     let subtitle: String
     let symbol: String
 
+    @Environment(\.wanderlustBottomShellMetrics) private var bottomShellMetrics
+
     var body: some View {
         ZStack {
             LinearGradient(
@@ -36,6 +38,7 @@ struct PlaceholderScreen: View {
             .padding(28)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
             .padding(24)
+            .padding(.bottom, bottomShellMetrics.contentInset)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

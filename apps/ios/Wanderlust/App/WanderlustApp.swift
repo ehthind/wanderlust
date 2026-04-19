@@ -61,8 +61,9 @@ struct WanderlustApp: App {
 
     private func configureTabBarAppearance() {
         let tabBar = UITabBar.appearance()
-        tabBar.itemPositioning = .centered
-        tabBar.itemWidth = 68
-        tabBar.itemSpacing = 12
+        tabBar.isHidden = true
+        tabBar.isTranslucent = true
+        tabBar.backgroundImage = UIImage()
+        tabBar.shadowImage = UIImage()
     }
 }

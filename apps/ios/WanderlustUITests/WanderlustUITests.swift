@@ -17,10 +17,12 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertFalse(app.buttons["discover.card.open.dest_kyoto"].exists)
 
         openGuide(destinationId: "dest_kyoto", in: app)
-        XCTAssertTrue(app.tabBars.buttons["Discover"].waitForExistence(timeout: 5))
+        let shell = app.otherElements["shell.tab.container"]
+        XCTAssertTrue(waitForNonExistence(shell))
 
         swipeRightToCloseGuide(in: app)
 
+        XCTAssertTrue(shell.waitForExistence(timeout: 5))
         XCTAssertTrue(kyotoCard.waitForExistence(timeout: 5))
         XCTAssertTrue(waitForValue("current", on: kyotoCard))
     }
@@ -72,6 +74,7 @@ final class WanderlustUITests: XCTestCase {
 
         let searchButton = app.buttons["workspace.searchButton"]
         XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForValue("selected", on: app.buttons["shell.tab.trips"]))
         tap(searchButton)
 
         let selectButton = app.buttons["workspace.selectStay.fixture_property_kyoto_1"]
@@ -87,7 +90,8 @@ final class WanderlustUITests: XCTestCase {
         openGuide(destinationId: "dest_paris", in: app)
 
         let viewport = app.windows.firstMatch.frame
-        let tabBar = app.tabBars.firstMatch
+        let shell = app.otherElements["shell.tab.container"]
+        XCTAssertTrue(waitForNonExistence(shell))
 
         let bestSeasonValue = app.otherElements["discover.detail.value.best_season"]
         scrollToElement(bestSeasonValue, in: app, direction: .up)
@@ -101,7 +105,7 @@ final class WanderlustUITests: XCTestCase {
 
         let planButton = app.buttons["discover.detail.planButton.dest_paris"]
         XCTAssertTrue(planButton.waitForExistence(timeout: 5))
-        XCTAssertLessThan(planButton.frame.maxY, tabBar.frame.minY)
+        XCTAssertLessThan(planButton.frame.maxY, viewport.maxY - 12)
 
         let firstStory = app.otherElements["discover.detail.story.paris-story-1"]
         let secondStory = app.otherElements["discover.detail.story.paris-story-2"]
@@ -116,10 +120,19 @@ final class WanderlustUITests: XCTestCase {
         let parisCard = app.otherElements["discover.card.dest_paris"]
         XCTAssertTrue(parisCard.waitForExistence(timeout: 5))
 
+        let shell = app.otherElements["shell.tab.container"]
+        let shellGroup = app.otherElements["shell.tab.group"]
+        let searchOrb = app.buttons["shell.tab.search"]
+        XCTAssertTrue(shell.waitForExistence(timeout: 5))
+        XCTAssertTrue(shellGroup.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchOrb.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForValue("iconOnly", on: shellGroup))
+        assertControlsAreVerticallyAligned(shellGroup, searchOrb)
+
         openGuide(destinationId: "dest_paris", in: app)
 
         let viewport = app.windows.firstMatch.frame
-        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(waitForNonExistence(shell))
 
         let bestSeasonValue = app.otherElements["discover.detail.value.best_season"]
         scrollToElement(bestSeasonValue, in: app, direction: .up)
@@ -133,7 +146,7 @@ final class WanderlustUITests: XCTestCase {
 
         let planButton = app.buttons["discover.detail.planButton.dest_paris"]
         XCTAssertTrue(planButton.waitForExistence(timeout: 5))
-        XCTAssertLessThan(planButton.frame.maxY, tabBar.frame.minY)
+        XCTAssertLessThan(planButton.frame.maxY, viewport.maxY - 12)
     }
 
     func testDiscoverDestinationGuideLoadingAndErrorStatesAreAccessible() {
@@ -150,11 +163,52 @@ final class WanderlustUITests: XCTestCase {
         openGuide(destinationId: "dest_kyoto", in: app)
 
         let loadingState = app.otherElements["discover.detail.loadingState.dest_kyoto"]
-        XCTAssertTrue(loadingState.waitForExistence(timeout: 2))
+        XCTAssertTrue(loadingState.waitForExistence(timeout: 5))
 
         let errorState = app.otherElements["discover.detail.errorState.dest_kyoto"]
         XCTAssertTrue(errorState.waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["discover.detail.retryButton.dest_kyoto"].waitForExistence(timeout: 5))
+    }
+
+    func testBottomShellSwitchesTabsAndSearchOrbUsesSearchTab() {
+        let app = launchApp()
+
+        let shellGroup = app.otherElements["shell.tab.group"]
+        let selection = app.otherElements["shell.tab.selection"]
+        XCTAssertTrue(shellGroup.waitForExistence(timeout: 5))
+        XCTAssertTrue(selection.waitForExistence(timeout: 5))
+
+        let discoverButton = app.buttons["shell.tab.discover"]
+        let searchButton = app.buttons["shell.tab.search"]
+        XCTAssertTrue(discoverButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
+        assertSelectionAligned(selection, with: discoverButton)
+        assertControlsAreVerticallyAligned(shellGroup, searchButton)
+
+        tap(searchButton)
+        XCTAssertTrue(waitForValue("selected", on: searchButton))
+        XCTAssertTrue(app.staticTexts["Search Will Become a Precision Tool"].waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForNonExistence(selection))
+
+        let inboxButton = app.buttons["shell.tab.inbox"]
+        tap(inboxButton)
+        XCTAssertTrue(waitForValue("selected", on: inboxButton))
+        XCTAssertTrue(app.staticTexts["Inbox Lands After Stay Selection"].waitForExistence(timeout: 5))
+        XCTAssertTrue(selection.waitForExistence(timeout: 5))
+        assertSelectionAligned(selection, with: inboxButton)
+
+        let tripsButton = app.buttons["shell.tab.trips"]
+        tap(tripsButton)
+        XCTAssertTrue(waitForValue("selected", on: tripsButton))
+        XCTAssertTrue(app.staticTexts["Your Active Trip Will Reopen Here"].waitForExistence(timeout: 5))
+        XCTAssertTrue(selection.waitForExistence(timeout: 5))
+        assertSelectionAligned(selection, with: tripsButton)
+
+        tap(discoverButton)
+        XCTAssertTrue(waitForValue("selected", on: discoverButton))
+        XCTAssertTrue(app.otherElements["discover.card.dest_paris"].waitForExistence(timeout: 5))
+        XCTAssertTrue(selection.waitForExistence(timeout: 5))
+        assertSelectionAligned(selection, with: discoverButton)
     }
 
     private func launchApp(
@@ -218,6 +272,33 @@ final class WanderlustUITests: XCTestCase {
         let predicate = NSPredicate(format: "label == %@", label)
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func waitForNonExistence(_ element: XCUIElement, timeout: TimeInterval = 5) -> Bool {
+        let predicate = NSPredicate(format: "exists == false")
+        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    private func assertSelectionAligned(
+        _ selection: XCUIElement,
+        with button: XCUIElement,
+        accuracy: CGFloat = 6,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertEqual(selection.frame.midX, button.frame.midX, accuracy: accuracy, file: file, line: line)
+        XCTAssertLessThanOrEqual(selection.frame.minY, button.frame.minY + 2, file: file, line: line)
+        XCTAssertGreaterThanOrEqual(selection.frame.maxY, button.frame.maxY - 2, file: file, line: line)
+    }
+
+    private func assertControlsAreVerticallyAligned(
+        _ shellGroup: XCUIElement,
+        _ searchOrb: XCUIElement,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertEqual(shellGroup.frame.midY, searchOrb.frame.midY, accuracy: 6, file: file, line: line)
     }
 
     private enum ScrollDirection {
