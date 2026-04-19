@@ -17,7 +17,9 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertFalse(app.buttons["discover.card.open.dest_kyoto"].exists)
 
         openGuide(destinationId: "dest_kyoto", in: app)
-        XCTAssertTrue(app.tabBars.buttons["Discover"].waitForExistence(timeout: 5))
+        let shell = app.otherElements["shell.tab.container"]
+        XCTAssertTrue(shell.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["shell.tab.discover"].exists)
 
         swipeRightToCloseGuide(in: app)
 
@@ -72,6 +74,7 @@ final class WanderlustUITests: XCTestCase {
 
         let searchButton = app.buttons["workspace.searchButton"]
         XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForValue("selected", on: app.buttons["shell.tab.trips"]))
         tap(searchButton)
 
         let selectButton = app.buttons["workspace.selectStay.fixture_property_kyoto_1"]
@@ -87,7 +90,8 @@ final class WanderlustUITests: XCTestCase {
         openGuide(destinationId: "dest_paris", in: app)
 
         let viewport = app.windows.firstMatch.frame
-        let tabBar = app.tabBars.firstMatch
+        let shell = app.otherElements["shell.tab.container"]
+        XCTAssertTrue(shell.waitForExistence(timeout: 5))
 
         let bestSeasonValue = app.otherElements["discover.detail.value.best_season"]
         scrollToElement(bestSeasonValue, in: app, direction: .up)
@@ -101,7 +105,7 @@ final class WanderlustUITests: XCTestCase {
 
         let planButton = app.buttons["discover.detail.planButton.dest_paris"]
         XCTAssertTrue(planButton.waitForExistence(timeout: 5))
-        XCTAssertLessThan(planButton.frame.maxY, tabBar.frame.minY)
+        XCTAssertLessThan(planButton.frame.maxY, shell.frame.minY)
 
         let firstStory = app.otherElements["discover.detail.story.paris-story-1"]
         let secondStory = app.otherElements["discover.detail.story.paris-story-2"]
@@ -119,7 +123,13 @@ final class WanderlustUITests: XCTestCase {
         openGuide(destinationId: "dest_paris", in: app)
 
         let viewport = app.windows.firstMatch.frame
-        let tabBar = app.tabBars.firstMatch
+        let shell = app.otherElements["shell.tab.container"]
+        let shellGroup = app.otherElements["shell.tab.group"]
+        let searchOrb = app.buttons["shell.tab.search"]
+        XCTAssertTrue(shell.waitForExistence(timeout: 5))
+        XCTAssertTrue(shellGroup.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchOrb.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForValue("iconOnly", on: shellGroup))
 
         let bestSeasonValue = app.otherElements["discover.detail.value.best_season"]
         scrollToElement(bestSeasonValue, in: app, direction: .up)
@@ -133,7 +143,10 @@ final class WanderlustUITests: XCTestCase {
 
         let planButton = app.buttons["discover.detail.planButton.dest_paris"]
         XCTAssertTrue(planButton.waitForExistence(timeout: 5))
-        XCTAssertLessThan(planButton.frame.maxY, tabBar.frame.minY)
+        XCTAssertLessThan(planButton.frame.maxY, shell.frame.minY)
+        XCTAssertLessThan(shellGroup.frame.maxX, searchOrb.frame.minX)
+        XCTAssertGreaterThanOrEqual(app.buttons["shell.tab.discover"].frame.minX, shellGroup.frame.minX)
+        XCTAssertLessThanOrEqual(app.buttons["shell.tab.inbox"].frame.maxX, shellGroup.frame.maxX)
     }
 
     func testDiscoverDestinationGuideLoadingAndErrorStatesAreAccessible() {
@@ -150,11 +163,36 @@ final class WanderlustUITests: XCTestCase {
         openGuide(destinationId: "dest_kyoto", in: app)
 
         let loadingState = app.otherElements["discover.detail.loadingState.dest_kyoto"]
-        XCTAssertTrue(loadingState.waitForExistence(timeout: 2))
+        XCTAssertTrue(loadingState.waitForExistence(timeout: 5))
 
         let errorState = app.otherElements["discover.detail.errorState.dest_kyoto"]
         XCTAssertTrue(errorState.waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["discover.detail.retryButton.dest_kyoto"].waitForExistence(timeout: 5))
+    }
+
+    func testBottomShellSwitchesTabsAndSearchOrbUsesSearchTab() {
+        let app = launchApp()
+
+        let searchButton = app.buttons["shell.tab.search"]
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
+        tap(searchButton)
+        XCTAssertTrue(waitForValue("selected", on: searchButton))
+        XCTAssertTrue(app.staticTexts["Search Will Become a Precision Tool"].waitForExistence(timeout: 5))
+
+        let inboxButton = app.buttons["shell.tab.inbox"]
+        tap(inboxButton)
+        XCTAssertTrue(waitForValue("selected", on: inboxButton))
+        XCTAssertTrue(app.staticTexts["Inbox Lands After Stay Selection"].waitForExistence(timeout: 5))
+
+        let tripsButton = app.buttons["shell.tab.trips"]
+        tap(tripsButton)
+        XCTAssertTrue(waitForValue("selected", on: tripsButton))
+        XCTAssertTrue(app.staticTexts["Your Active Trip Will Reopen Here"].waitForExistence(timeout: 5))
+
+        let discoverButton = app.buttons["shell.tab.discover"]
+        tap(discoverButton)
+        XCTAssertTrue(waitForValue("selected", on: discoverButton))
+        XCTAssertTrue(app.otherElements["discover.card.dest_paris"].waitForExistence(timeout: 5))
     }
 
     private func launchApp(

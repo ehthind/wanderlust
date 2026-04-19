@@ -34,6 +34,7 @@ struct DiscoverDestinationDetailScreen: View {
     let onRetry: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.wanderlustBottomShellMetrics) private var bottomShellMetrics
 
     private let accentColor = DiscoverDestinationDetailLayout.accentColor
 
@@ -72,6 +73,12 @@ struct DiscoverDestinationDetailScreen: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             bottomActionBar
+                .padding(
+                    .bottom,
+                    bottomShellMetrics.contentInset
+                        + bottomShellMetrics.shellHeight
+                        + bottomShellMetrics.bottomPadding
+                )
         }
         .background(alignment: .topLeading) {
             Color.clear
@@ -235,38 +242,47 @@ struct DiscoverDestinationDetailScreen: View {
     }
 
     private var bottomActionBar: some View {
-        VStack(spacing: 0) {
-            Divider()
-
-            Button(action: onPlanTrip) {
-                HStack(spacing: 12) {
-                    if isPlanning {
-                        ProgressView()
-                            .tint(.white)
-                    }
-
-                    Text(isPlanning ? "Building Trip..." : "Plan Trip")
-                        .font(.system(.headline, design: .rounded).weight(.bold))
-
-                    Spacer()
-
-                    Image(systemName: "arrow.right.circle.fill")
-                        .font(.system(.title3, design: .rounded).weight(.semibold))
+        Button(action: onPlanTrip) {
+            HStack(spacing: 12) {
+                if isPlanning {
+                    ProgressView()
+                        .tint(.white)
                 }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 16)
-                .frame(maxWidth: .infinity)
-                .background(accentColor, in: RoundedRectangle(cornerRadius: DiscoverDestinationDetailLayout.buttonCornerRadius, style: .continuous))
+
+                Text(isPlanning ? "Building Trip..." : "Plan Trip")
+                    .font(.system(.headline, design: .rounded).weight(.bold))
+
+                Spacer()
+
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.system(.title3, design: .rounded).weight(.semibold))
             }
-            .buttonStyle(.plain)
-            .disabled(isPlanning)
-            .accessibilityIdentifier("discover.detail.planButton.\(destination.id)")
-            .padding(.horizontal, 20)
-            .padding(.top, DiscoverDestinationDetailLayout.actionPadding)
-            .padding(.bottom, DiscoverDestinationDetailLayout.actionPadding)
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
+            .background(
+                accentColor,
+                in: RoundedRectangle(
+                    cornerRadius: DiscoverDestinationDetailLayout.buttonCornerRadius,
+                    style: .continuous
+                )
+            )
         }
-        .background(.regularMaterial)
+        .buttonStyle(.plain)
+        .disabled(isPlanning)
+        .accessibilityIdentifier("discover.detail.planButton.\(destination.id)")
+        .padding(DiscoverDestinationDetailLayout.actionPadding)
+        .background(
+            .regularMaterial,
+            in: RoundedRectangle(cornerRadius: 28, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .strokeBorder(cardBorderColor, lineWidth: DiscoverDestinationDetailLayout.borderWidth)
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, DiscoverDestinationDetailLayout.actionPadding)
     }
 
     private var backgroundGradient: some View {

@@ -3,6 +3,7 @@ import SwiftUI
 struct TripWorkspaceScreen: View {
     @ObservedObject var appState: AppState
     @StateObject private var viewModel: TripWorkspaceViewModel
+    @Environment(\.wanderlustBottomShellMetrics) private var bottomShellMetrics
 
     init(tripDraftId: String, appState: AppState) {
         self.appState = appState
@@ -51,6 +52,7 @@ struct TripWorkspaceScreen: View {
                         }
                     }
                     .padding(24)
+                    .padding(.bottom, bottomShellMetrics.contentInset)
                 }
             }
         }

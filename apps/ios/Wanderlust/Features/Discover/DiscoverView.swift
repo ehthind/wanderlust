@@ -19,6 +19,7 @@ struct DiscoverView: View {
     @State private var feedScrollTarget: String?
     @State private var activeDestinationId: String?
     @State private var displayedDestinationId: String?
+    @Environment(\.wanderlustBottomShellMetrics) private var bottomShellMetrics
 
     init(appState: AppState) {
         self.appState = appState
@@ -34,7 +35,7 @@ struct DiscoverView: View {
     var body: some View {
         GeometryReader { proxy in
             let pageWidth = min(proxy.size.width, UIScreen.main.bounds.width)
-            let feedCardBottomInset = proxy.safeAreaInsets.bottom
+            let feedCardBottomInset = proxy.safeAreaInsets.bottom + bottomShellMetrics.contentInset
             let pageSize = CGSize(
                 width: pageWidth,
                 height: proxy.size.height + feedCardBottomInset
@@ -66,10 +67,6 @@ struct DiscoverView: View {
         }
         .background(Color.black.ignoresSafeArea())
         .animation(.easeInOut(duration: DiscoverViewLayout.cardScrollAnimationDuration), value: activeDestinationId)
-        .toolbar(.visible, for: .tabBar)
-        .toolbarBackground(.visible, for: .tabBar)
-        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-        .toolbarColorScheme(.dark, for: .tabBar)
         .task {
             await viewModel.loadIfNeeded()
             feedScrollTarget = viewModel.currentCard?.destination.id
@@ -251,7 +248,7 @@ private struct DiscoverFeedSurface: View {
                     .padding(.horizontal, DiscoverViewLayout.errorBannerHorizontalPadding)
                     .padding(.vertical, DiscoverViewLayout.errorBannerVerticalPadding)
                     .background(Color.black.opacity(0.72), in: Capsule())
-                    .padding(.bottom, DiscoverViewLayout.errorBannerBottomPadding + feedCardBottomInset)
+                    .padding(.bottom, DiscoverViewLayout.errorBannerBottomPadding + feedCardBottomInset + 12)
             }
         }
     }
