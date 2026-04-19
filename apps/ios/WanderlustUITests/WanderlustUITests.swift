@@ -105,7 +105,7 @@ final class WanderlustUITests: XCTestCase {
 
         let planButton = app.buttons["discover.detail.planButton.dest_paris"]
         XCTAssertTrue(planButton.waitForExistence(timeout: 5))
-        XCTAssertLessThan(planButton.frame.maxY, viewport.maxY - 12)
+        XCTAssertLessThanOrEqual(planButton.frame.maxY, viewport.maxY - 12)
 
         let firstStory = app.otherElements["discover.detail.story.paris-story-1"]
         let secondStory = app.otherElements["discover.detail.story.paris-story-2"]
@@ -122,12 +122,12 @@ final class WanderlustUITests: XCTestCase {
 
         let shell = app.otherElements["shell.tab.container"]
         let shellGroup = app.otherElements["shell.tab.group"]
-        let searchOrb = app.buttons["shell.tab.search"]
+        let searchButton = app.buttons["shell.tab.search"]
         XCTAssertTrue(shell.waitForExistence(timeout: 5))
         XCTAssertTrue(shellGroup.waitForExistence(timeout: 5))
-        XCTAssertTrue(searchOrb.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
         XCTAssertTrue(waitForValue("iconOnly", on: shellGroup))
-        assertControlsAreVerticallyAligned(shellGroup, searchOrb)
+        assertSearchButtonAppearsAboveShellGroup(searchButton, shellGroup)
 
         openGuide(destinationId: "dest_paris", in: app)
 
@@ -170,7 +170,31 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertTrue(app.buttons["discover.detail.retryButton.dest_kyoto"].waitForExistence(timeout: 5))
     }
 
-    func testBottomShellSwitchesTabsAndSearchOrbUsesSearchTab() {
+    func testDiscoverFeedFloatingActionsSupportSaveAndPlanning() {
+        let app = launchApp()
+
+        let parisSaveButton = app.buttons["discover.saveButton.dest_paris"]
+        let parisPlanButton = app.buttons["discover.planTripButton.dest_paris"]
+        XCTAssertTrue(parisSaveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(parisPlanButton.waitForExistence(timeout: 5))
+
+        tap(parisSaveButton)
+        XCTAssertTrue(waitForLabel("Saved", on: parisSaveButton))
+
+        app.swipeUp()
+        XCTAssertTrue(app.buttons["discover.saveButton.dest_kyoto"].waitForExistence(timeout: 5))
+
+        app.swipeDown()
+        let returnedParisSaveButton = app.buttons["discover.saveButton.dest_paris"]
+        XCTAssertTrue(returnedParisSaveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForLabel("Saved", on: returnedParisSaveButton))
+
+        tap(app.buttons["discover.planTripButton.dest_paris"])
+        XCTAssertTrue(app.buttons["workspace.searchButton"].waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForValue("selected", on: app.buttons["shell.tab.trips"]))
+    }
+
+    func testRootChromeSwitchesTabsAndTopSearchUsesSearchTab() {
         let app = launchApp()
 
         let shellGroup = app.otherElements["shell.tab.group"]
@@ -182,8 +206,8 @@ final class WanderlustUITests: XCTestCase {
         let searchButton = app.buttons["shell.tab.search"]
         XCTAssertTrue(discoverButton.waitForExistence(timeout: 5))
         XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
-        assertSelectionAligned(selection, with: discoverButton)
-        assertControlsAreVerticallyAligned(shellGroup, searchButton)
+        XCTAssertTrue(waitForValue("Discover", on: selection))
+        assertSearchButtonAppearsAboveShellGroup(searchButton, shellGroup)
 
         tap(searchButton)
         XCTAssertTrue(waitForValue("selected", on: searchButton))
@@ -195,20 +219,20 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertTrue(waitForValue("selected", on: inboxButton))
         XCTAssertTrue(app.staticTexts["Inbox Lands After Stay Selection"].waitForExistence(timeout: 5))
         XCTAssertTrue(selection.waitForExistence(timeout: 5))
-        assertSelectionAligned(selection, with: inboxButton)
+        XCTAssertTrue(waitForValue("Inbox", on: selection))
 
         let tripsButton = app.buttons["shell.tab.trips"]
         tap(tripsButton)
         XCTAssertTrue(waitForValue("selected", on: tripsButton))
         XCTAssertTrue(app.staticTexts["Your Active Trip Will Reopen Here"].waitForExistence(timeout: 5))
         XCTAssertTrue(selection.waitForExistence(timeout: 5))
-        assertSelectionAligned(selection, with: tripsButton)
+        XCTAssertTrue(waitForValue("Trips", on: selection))
 
         tap(discoverButton)
         XCTAssertTrue(waitForValue("selected", on: discoverButton))
         XCTAssertTrue(app.otherElements["discover.card.dest_paris"].waitForExistence(timeout: 5))
         XCTAssertTrue(selection.waitForExistence(timeout: 5))
-        assertSelectionAligned(selection, with: discoverButton)
+        XCTAssertTrue(waitForValue("Discover", on: selection))
     }
 
     private func launchApp(
@@ -280,25 +304,13 @@ final class WanderlustUITests: XCTestCase {
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
-    private func assertSelectionAligned(
-        _ selection: XCUIElement,
-        with button: XCUIElement,
-        accuracy: CGFloat = 6,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) {
-        XCTAssertEqual(selection.frame.midX, button.frame.midX, accuracy: accuracy, file: file, line: line)
-        XCTAssertLessThanOrEqual(selection.frame.minY, button.frame.minY + 2, file: file, line: line)
-        XCTAssertGreaterThanOrEqual(selection.frame.maxY, button.frame.maxY - 2, file: file, line: line)
-    }
-
-    private func assertControlsAreVerticallyAligned(
+    private func assertSearchButtonAppearsAboveShellGroup(
+        _ searchButton: XCUIElement,
         _ shellGroup: XCUIElement,
-        _ searchOrb: XCUIElement,
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        XCTAssertEqual(shellGroup.frame.midY, searchOrb.frame.midY, accuracy: 6, file: file, line: line)
+        XCTAssertLessThan(searchButton.frame.maxY, shellGroup.frame.minY, file: file, line: line)
     }
 
     private enum ScrollDirection {

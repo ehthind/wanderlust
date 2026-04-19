@@ -38,6 +38,7 @@ struct PlaceholderScreen: View {
             .padding(28)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
             .padding(24)
+            .padding(.top, bottomShellMetrics.topContentInset)
             .padding(.bottom, bottomShellMetrics.contentInset)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

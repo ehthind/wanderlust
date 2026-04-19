@@ -46,8 +46,10 @@ struct WanderlustBottomShellMetrics {
     let horizontalPadding: CGFloat
     let contentInset: CGFloat
     let groupTabWidth: CGFloat
-    let searchOrbSize: CGFloat
-    let groupGap: CGFloat
+    let topOrbSize: CGFloat
+    let topPadding: CGFloat
+    let topContentInset: CGFloat
+    let groupSpacing: CGFloat
     let selectionInset: CGFloat
 
     static let `default` = Self(
@@ -55,11 +57,13 @@ struct WanderlustBottomShellMetrics {
         shellHeight: 46,
         bottomPadding: 12,
         horizontalPadding: 16,
-        contentInset: 70,
-        groupTabWidth: 70,
-        searchOrbSize: 46,
-        groupGap: 12,
-        selectionInset: 3
+        contentInset: 76,
+        groupTabWidth: 60,
+        topOrbSize: 46,
+        topPadding: 10,
+        topContentInset: 74,
+        groupSpacing: 4,
+        selectionInset: 4
     )
 
     static func resolve(for size: CGSize, dynamicTypeSize: DynamicTypeSize) -> Self {
@@ -69,27 +73,31 @@ struct WanderlustBottomShellMetrics {
             : .labeled
 
         let shellHeight: CGFloat = contentMode == .labeled ? 46 : 42
-        let bottomPadding: CGFloat = size.height < 760 ? 10 : 12
+        let bottomPadding: CGFloat = size.height < 760 ? 18 : 22
         let horizontalPadding: CGFloat = size.width >= 430 ? 20 : 16
-        let groupTabWidth: CGFloat = contentMode == .labeled ? 70 : 40
-        let searchOrbSize: CGFloat = shellHeight
-        let selectionInset: CGFloat = 3
+        let groupTabWidth: CGFloat = contentMode == .labeled ? 64 : 46
+        let topOrbSize: CGFloat = contentMode == .labeled ? 46 : 44
+        let topPadding: CGFloat = size.height < 760 ? 8 : 10
+        let groupSpacing: CGFloat = 4
+        let selectionInset: CGFloat = 4
 
         return Self(
             contentMode: contentMode,
             shellHeight: shellHeight,
             bottomPadding: bottomPadding,
             horizontalPadding: horizontalPadding,
-            contentInset: shellHeight + bottomPadding + 12,
+            contentInset: shellHeight + bottomPadding + 18,
             groupTabWidth: groupTabWidth,
-            searchOrbSize: searchOrbSize,
-            groupGap: 12,
+            topOrbSize: topOrbSize,
+            topPadding: topPadding,
+            topContentInset: topOrbSize + topPadding + 18,
+            groupSpacing: groupSpacing,
             selectionInset: selectionInset
         )
     }
 
     var groupWidth: CGFloat {
-        groupTabWidth * 3 + selectionInset * 2
+        groupTabWidth * 3 + groupSpacing * 2 + selectionInset * 2
     }
 
     var groupContentHeight: CGFloat {
@@ -108,10 +116,30 @@ extension EnvironmentValues {
     }
 }
 
+@MainActor
+final class DiscoverChromeState: ObservableObject {
+    struct SaveCallToAction {
+        let isSaved: Bool
+        let accessibilityIdentifier: String
+        let action: () -> Void
+    }
+
+    struct PlanTripCallToAction {
+        let isPlanning: Bool
+        let isEnabled: Bool
+        let accessibilityIdentifier: String
+        let action: () -> Void
+    }
+
+    @Published var saveCallToAction: SaveCallToAction?
+    @Published var planTripCallToAction: PlanTripCallToAction?
+}
+
 struct WanderlustRootView: View {
     @ObservedObject var appState: AppState
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isDiscoverGuidePresented = false
+    @StateObject private var discoverChromeState = DiscoverChromeState()
 
     var body: some View {
         GeometryReader { proxy in
@@ -119,18 +147,19 @@ struct WanderlustRootView: View {
                 for: proxy.size,
                 dynamicTypeSize: dynamicTypeSize
             )
-            let showsBottomShell = appState.selectedTab != .discover || !isDiscoverGuidePresented
+            let showsRootChrome = appState.selectedTab != .discover || !isDiscoverGuidePresented
 
-            ZStack(alignment: .bottom) {
+            ZStack {
                 TabView(selection: $appState.selectedTab) {
                     DiscoverView(
                         appState: appState,
-                        isGuidePresented: $isDiscoverGuidePresented
+                        isGuidePresented: $isDiscoverGuidePresented,
+                        chromeState: discoverChromeState
                     )
-                        .tag(AppState.Tab.discover)
-                        .tabItem {
-                            Label("Discover", systemImage: WanderlustTabItem.discoverSymbol)
-                        }
+                    .tag(AppState.Tab.discover)
+                    .tabItem {
+                        Label("Discover", systemImage: WanderlustTabItem.discoverSymbol)
+                    }
 
                     TripsRootView(appState: appState)
                         .tag(AppState.Tab.trips)
@@ -159,26 +188,99 @@ struct WanderlustRootView: View {
                     }
                 }
                 .toolbar(.hidden, for: .tabBar)
-                .environment(\.wanderlustBottomShellMetrics, metrics)
 
-                if showsBottomShell {
-                    WanderlustBottomShell(
+                if showsRootChrome {
+                    WanderlustRootChrome(
                         selectedTab: $appState.selectedTab,
-                        metrics: metrics
+                        metrics: metrics,
+                        discoverSaveCallToAction: appState.selectedTab == .discover
+                            ? discoverChromeState.saveCallToAction
+                            : nil,
+                        discoverPlanTripCallToAction: appState.selectedTab == .discover
+                            ? discoverChromeState.planTripCallToAction
+                            : nil
                     )
                     .padding(.horizontal, metrics.horizontalPadding)
+                    .safeAreaPadding(.top, metrics.topPadding)
                     .safeAreaPadding(.bottom, metrics.bottomPadding)
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("shell.tab.container")
                     .zIndex(1)
                 }
             }
+            .environment(\.wanderlustBottomShellMetrics, metrics)
         }
         .tint(WanderlustTabItem.accentColor)
     }
 }
 
-private struct WanderlustBottomShell: View {
+private struct WanderlustRootChrome: View {
+    @Binding var selectedTab: AppState.Tab
+    let metrics: WanderlustBottomShellMetrics
+    let discoverSaveCallToAction: DiscoverChromeState.SaveCallToAction?
+    let discoverPlanTripCallToAction: DiscoverChromeState.PlanTripCallToAction?
+    private let bottomRowHorizontalInset: CGFloat = 12
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            bottomRow
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var searchButton: some View {
+        RootChromeSearchButton(
+            selectedTab: $selectedTab,
+            metrics: metrics
+        )
+    }
+
+    private var groupedTabsSection: some View {
+        RootChromeTabGroup(
+            selectedTab: $selectedTab,
+            metrics: metrics
+        )
+    }
+
+    private var bottomRow: some View {
+        HStack(alignment: .bottom, spacing: 12) {
+            groupedTabsSection
+
+            Spacer(minLength: 0)
+
+            actionStack
+        }
+        .padding(.horizontal, bottomRowHorizontalInset)
+    }
+
+    private var actionStack: some View {
+        VStack(spacing: 10) {
+            searchButton
+
+            if let discoverSaveCallToAction {
+                DiscoverSaveButton(
+                    isSaved: discoverSaveCallToAction.isSaved,
+                    fontWeight: .medium,
+                    accessibilityIdentifier: discoverSaveCallToAction.accessibilityIdentifier,
+                    onTap: discoverSaveCallToAction.action
+                )
+            }
+
+            if let discoverPlanTripCallToAction {
+                DiscoverPlanTripButton(
+                    isPlanning: discoverPlanTripCallToAction.isPlanning,
+                    isEnabled: discoverPlanTripCallToAction.isEnabled,
+                    accessibilityIdentifier: discoverPlanTripCallToAction.accessibilityIdentifier,
+                    onTap: discoverPlanTripCallToAction.action
+                )
+            }
+        }
+    }
+}
+
+private struct RootChromeTabGroup: View {
     @Binding var selectedTab: AppState.Tab
     let metrics: WanderlustBottomShellMetrics
 
@@ -192,105 +294,20 @@ private struct WanderlustBottomShell: View {
     }
 
     var body: some View {
-        Group {
-            if #available(iOS 26.0, *) {
-                GlassEffectContainer(spacing: metrics.groupGap) {
-                    shellContents
-                }
-            } else {
-                shellContents
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .bottomLeading)
-        .animation(.spring(response: 0.34, dampingFraction: 0.84), value: selectedTab)
-        .accessibilityElement(children: .contain)
-    }
-
-    private var shellContents: some View {
-        HStack(alignment: .center, spacing: metrics.groupGap) {
-            shellGroup
-                .accessibilityElement(children: .contain)
-                .accessibilityIdentifier("shell.tab.group")
-                .accessibilityValue(metrics.contentMode == .labeled ? "labeled" : "iconOnly")
-
-            searchOrb
-        }
-    }
-
-    private var shellGroup: some View {
         ZStack {
-            groupSelectionTrack
-            groupButtons
+            groupShell
+            selectionTrack
+            buttonRow
         }
         .frame(width: metrics.groupWidth, height: metrics.shellHeight)
-        .background(groupShellBackground)
-    }
-
-    private var groupSelectionTrack: some View {
-        HStack(spacing: 0) {
-            ForEach(groupedTabs, id: \.self) { tab in
-                selectionSlot(for: tab)
-                    .frame(width: metrics.groupTabWidth, height: metrics.groupContentHeight)
-            }
-        }
-        .padding(metrics.selectionInset)
-        .allowsHitTesting(false)
-    }
-
-    private var groupButtons: some View {
-        HStack(spacing: 0) {
-            ForEach(groupedTabs, id: \.self) { tab in
-                Button {
-                    selectedTab = tab
-                } label: {
-                    groupButtonLabel(for: tab)
-                        .frame(width: metrics.groupTabWidth, height: metrics.groupContentHeight)
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier(accessibilityIdentifier(for: tab))
-                .accessibilityLabel(WanderlustTabItem.title(for: tab))
-                .accessibilityValue(selectedTab == tab ? "selected" : "not selected")
-            }
-        }
-        .padding(metrics.selectionInset)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("shell.tab.group")
+        .accessibilityValue(metrics.contentMode == .labeled ? "labeled" : "iconOnly")
+        .animation(.spring(response: 0.34, dampingFraction: 0.84), value: selectedTab)
     }
 
     @ViewBuilder
-    private func selectionSlot(for tab: AppState.Tab) -> some View {
-        if selectedGroupedTab == tab {
-            selectionSurface
-                .accessibilityElement()
-                .accessibilityIdentifier("shell.tab.selection")
-                .accessibilityLabel("Selected tab")
-                .accessibilityValue(WanderlustTabItem.title(for: tab))
-        } else {
-            Color.clear
-        }
-    }
-
-    @ViewBuilder
-    private var selectionSurface: some View {
-        if #available(iOS 26.0, *) {
-            Capsule()
-                .fill(.clear)
-                .glassEffect(.regular.tint(selectedShellTint).interactive(false), in: Capsule())
-                .glassEffectID("selected-tab", in: selectionNamespace)
-                .glassEffectTransition(.matchedGeometry)
-        } else {
-            Capsule()
-                .fill(selectedShellTint.opacity(colorScheme == .dark ? 0.34 : 0.58))
-                .overlay {
-                    Capsule()
-                        .strokeBorder(selectionBorderColor, lineWidth: 1)
-                }
-                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.16 : 0.08), radius: 10, y: 4)
-                .matchedGeometryEffect(id: "selected-tab", in: selectionNamespace, properties: .frame)
-        }
-    }
-
-    @ViewBuilder
-    private var groupShellBackground: some View {
+    private var groupShell: some View {
         if #available(iOS 26.0, *) {
             Capsule()
                 .fill(.clear)
@@ -306,102 +323,123 @@ private struct WanderlustBottomShell: View {
         }
     }
 
-    private func groupButtonLabel(for tab: AppState.Tab) -> some View {
-        let isSelected = selectedTab == tab
-
-        return Group {
-            if metrics.contentMode == .iconOnly {
-                Image(systemName: WanderlustTabItem.symbol(for: tab))
-                    .symbolRenderingMode(.hierarchical)
-                    .font(.system(size: 16, weight: isSelected ? .semibold : .medium))
-            } else {
-                VStack(spacing: 1) {
-                    Image(systemName: WanderlustTabItem.symbol(for: tab))
-                        .symbolRenderingMode(.hierarchical)
-                        .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
-
-                    Text(WanderlustTabItem.title(for: tab))
-                        .font(.system(size: 9, weight: isSelected ? .semibold : .medium, design: .rounded))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.82)
-                }
+    private var selectionTrack: some View {
+        HStack(spacing: metrics.groupSpacing) {
+            ForEach(groupedTabs, id: \.self) { tab in
+                selectionBackground(for: tab)
+                    .frame(width: metrics.groupTabWidth, height: metrics.groupContentHeight)
             }
         }
-        .foregroundStyle(isSelected ? Color.primary : Color.secondary)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(metrics.selectionInset)
+        .allowsHitTesting(false)
+    }
+
+    private var buttonRow: some View {
+        HStack(spacing: metrics.groupSpacing) {
+            ForEach(groupedTabs, id: \.self) { tab in
+                groupButton(for: tab)
+            }
+        }
+        .padding(metrics.selectionInset)
     }
 
     @ViewBuilder
-    private var searchOrb: some View {
-        if #available(iOS 26.0, *) {
-            searchOrbButton
-                .buttonBorderShape(.circle)
-                .buttonSizing(.fitted)
-                .controlSize(.mini)
-                .if(selectedTab == .search) { view in
-                    view
-                        .buttonStyle(.glassProminent)
-                        .tint(selectedShellTint)
-                }
-                .if(selectedTab != .search) { view in
-                    view.buttonStyle(.glass)
-                }
+    private func selectionBackground(for tab: AppState.Tab) -> some View {
+        if selectedGroupedTab == tab {
+            selectedTabBackground
+                .accessibilityElement()
+                .accessibilityIdentifier("shell.tab.selection")
+                .accessibilityLabel("Selected tab")
+                .accessibilityValue(WanderlustTabItem.title(for: tab))
         } else {
-            searchOrbButton
-                .buttonStyle(.plain)
-                .background {
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .overlay {
-                            if selectedTab == .search {
-                                Circle()
-                                    .fill(selectedShellTint.opacity(colorScheme == .dark ? 0.28 : 0.44))
-                            }
-                        }
-                        .overlay {
-                            Circle()
-                                .strokeBorder(
-                                    selectedTab == .search ? selectionBorderColor : shellBorderColor,
-                                    lineWidth: 1
-                                )
-                        }
-                }
-                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.08), radius: 18, y: 8)
+            Color.clear
         }
     }
 
-    private var searchOrbButton: some View {
-        let isSelected = selectedTab == .search
+    private var selectedTabBackground: some View {
+        Group {
+            if #available(iOS 26.0, *) {
+                Capsule()
+                    .fill(.clear)
+                    .glassEffect(.regular.tint(selectedShellTint).interactive(false), in: Capsule())
+            } else {
+                Capsule()
+                    .fill(selectedShellTint.opacity(colorScheme == .dark ? 0.32 : 0.44))
+                    .overlay {
+                        Capsule()
+                            .strokeBorder(selectionBorderColor, lineWidth: 1)
+                    }
+                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.16 : 0.06), radius: 8, y: 4)
+            }
+        }
+        .matchedGeometryEffect(
+            id: "selected-tab",
+            in: selectionNamespace,
+            properties: .frame
+        )
+    }
+
+    private func groupButton(for tab: AppState.Tab) -> some View {
+        let isSelected = selectedTab == tab
 
         return Button {
-            selectedTab = .search
+            selectedTab = tab
         } label: {
-            Image(systemName: WanderlustTabItem.searchSymbol)
-                .font(.system(size: 18, weight: isSelected ? .semibold : .medium))
-                .foregroundStyle(isSelected ? Color.primary : Color.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            groupButtonLabel(for: tab, isSelected: isSelected)
+                .frame(width: metrics.groupTabWidth, height: metrics.groupContentHeight)
+                .contentShape(Capsule())
         }
-        .frame(width: metrics.searchOrbSize, height: metrics.searchOrbSize)
-        .contentShape(Circle())
-        .accessibilityIdentifier("shell.tab.search")
-        .accessibilityLabel(WanderlustTabItem.title(for: .search))
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityIdentifier(for: tab))
+        .accessibilityLabel(WanderlustTabItem.title(for: tab))
         .accessibilityValue(isSelected ? "selected" : "not selected")
     }
 
-    private var groupShellTint: Color {
-        colorScheme == .dark ? Color.white.opacity(0.08) : Color.white.opacity(0.18)
+    private func groupButtonLabel(for tab: AppState.Tab, isSelected: Bool) -> some View {
+        Text(metrics.contentMode == .iconOnly ? compactTitle(for: tab) : WanderlustTabItem.title(for: tab))
+            .font(
+                .system(
+                    size: metrics.contentMode == .iconOnly ? 12 : 14,
+                    weight: isSelected ? .semibold : .regular,
+                    design: .rounded
+                )
+            )
+            .lineLimit(1)
+            .minimumScaleFactor(0.76)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .foregroundStyle(isSelected ? Color.primary : Color.white.opacity(0.82))
     }
 
+    private func compactTitle(for tab: AppState.Tab) -> String {
+        switch tab {
+        case .discover:
+            "Disc"
+        case .trips:
+            "Trips"
+        case .search:
+            "Search"
+        case .inbox:
+            "Inbox"
+        }
+    }
+
+    private var groupShellTint: Color {
+        colorScheme == .dark ? Color.white.opacity(0.05) : Color.white.opacity(0.08)
+    }
+
+    private var inactiveShellTint: Color {
+        colorScheme == .dark ? Color.white.opacity(0.03) : Color.white.opacity(0.06)
+    }
     private var selectedShellTint: Color {
-        Color(red: 0.94, green: 0.9, blue: 0.8).opacity(colorScheme == .dark ? 0.18 : 0.38)
+        Color(red: 0.95, green: 0.92, blue: 0.85).opacity(colorScheme == .dark ? 0.14 : 0.2)
     }
 
     private var shellBorderColor: Color {
-        colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
     }
 
     private var selectionBorderColor: Color {
-        colorScheme == .dark ? Color.white.opacity(0.16) : Color.white.opacity(0.5)
+        colorScheme == .dark ? Color.white.opacity(0.1) : Color.white.opacity(0.18)
     }
 
     private func accessibilityIdentifier(for tab: AppState.Tab) -> String {
@@ -415,6 +453,91 @@ private struct WanderlustBottomShell: View {
         case .inbox:
             "shell.tab.inbox"
         }
+    }
+}
+
+private struct RootChromeSearchButton: View {
+    @Binding var selectedTab: AppState.Tab
+    let metrics: WanderlustBottomShellMetrics
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var isSelected: Bool {
+        selectedTab == .search
+    }
+
+    var body: some View {
+        Group {
+            if #available(iOS 26.0, *) {
+                Button {
+                    selectedTab = .search
+                } label: {
+                    searchLabel
+                }
+                .buttonBorderShape(.circle)
+                .tint(isSelected ? selectedShellTint : inactiveShellTint)
+                .if(isSelected) { view in
+                    view.buttonStyle(.glassProminent)
+                }
+                .if(!isSelected) { view in
+                    view.buttonStyle(.glass)
+                }
+            } else {
+                Button {
+                    selectedTab = .search
+                } label: {
+                    searchLabel
+                }
+                .buttonStyle(.plain)
+                .background {
+                    Circle()
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            if isSelected {
+                                Circle()
+                                    .fill(selectedShellTint.opacity(colorScheme == .dark ? 0.28 : 0.36))
+                            }
+                        }
+                        .overlay {
+                            Circle()
+                                .strokeBorder(
+                                    isSelected ? selectionBorderColor : shellBorderColor,
+                                    lineWidth: 1
+                                )
+                        }
+                }
+                .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.18 : 0.08), radius: 18, y: 8)
+            }
+        }
+        .frame(width: metrics.topOrbSize, height: metrics.topOrbSize)
+        .contentShape(Circle())
+        .accessibilityIdentifier("shell.tab.search")
+        .accessibilityLabel(WanderlustTabItem.title(for: .search))
+        .accessibilityValue(isSelected ? "selected" : "not selected")
+    }
+
+    private var searchLabel: some View {
+        Image(systemName: WanderlustTabItem.searchSymbol)
+            .symbolRenderingMode(.hierarchical)
+            .font(.system(size: 18, weight: isSelected ? .semibold : .medium))
+            .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var inactiveShellTint: Color {
+        colorScheme == .dark ? Color.white.opacity(0.03) : Color.white.opacity(0.06)
+    }
+
+    private var selectedShellTint: Color {
+        Color(red: 0.95, green: 0.92, blue: 0.85).opacity(colorScheme == .dark ? 0.14 : 0.2)
+    }
+
+    private var shellBorderColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
+    }
+
+    private var selectionBorderColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.1) : Color.white.opacity(0.18)
     }
 }
 

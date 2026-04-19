@@ -18,7 +18,7 @@ private enum DiscoverDestinationDetailLayout {
     static let storyTextSpacing: CGFloat = 10
     static let toolbarIconSize: CGFloat = 18
     static let actionPadding: CGFloat = 12
-    static let actionBottomPaddingWithoutShell: CGFloat = 40
+    static let actionBottomPaddingWithoutShell: CGFloat = 52
     static let buttonCornerRadius: CGFloat = 18
     static let borderWidth: CGFloat = 1
 }
