@@ -35,7 +35,10 @@ struct DiscoverView: View {
         GeometryReader { proxy in
             let pageWidth = min(proxy.size.width, UIScreen.main.bounds.width)
             let feedCardBottomInset = proxy.safeAreaInsets.bottom
-            let pageSize = CGSize(width: pageWidth, height: proxy.size.height)
+            let pageSize = CGSize(
+                width: pageWidth,
+                height: proxy.size.height + feedCardBottomInset
+            )
 
             ZStack(alignment: .top) {
                 DiscoverFeedSurface(
@@ -64,7 +67,8 @@ struct DiscoverView: View {
         .background(Color.black.ignoresSafeArea())
         .animation(.easeInOut(duration: DiscoverViewLayout.cardScrollAnimationDuration), value: activeDestinationId)
         .toolbar(.visible, for: .tabBar)
-        .toolbarBackground(.hidden, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .toolbarColorScheme(.dark, for: .tabBar)
         .task {
             await viewModel.loadIfNeeded()
@@ -285,14 +289,10 @@ private struct DiscoverFeedCard: View {
     let onToggleSaved: () -> Void
     let onPlanTrip: () -> Void
 
-    private var artworkHeight: CGFloat {
-        pageSize.height + (isDisplayed ? bottomContentInset : 0)
-    }
-
     var body: some View {
         ZStack(alignment: .topLeading) {
             DiscoverHeroImage(destination: card.destination)
-                .frame(width: pageSize.width, height: artworkHeight, alignment: .top)
+                .frame(width: pageSize.width, height: pageSize.height, alignment: .top)
 
             LinearGradient(
                 colors: [
@@ -304,7 +304,7 @@ private struct DiscoverFeedCard: View {
                 startPoint: .top,
                 endPoint: .bottom
             )
-            .frame(width: pageSize.width, height: artworkHeight, alignment: .top)
+            .frame(width: pageSize.width, height: pageSize.height, alignment: .top)
 
             VStack(alignment: .leading, spacing: 0) {
                 Spacer()
