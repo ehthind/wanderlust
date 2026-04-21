@@ -93,6 +93,140 @@ final class ContractDecodingTests: XCTestCase {
             { "label": "Visa", "value": "Visa-free" },
             { "label": "Trip length", "value": "4-7 days" }
           ],
+          "mapTour": {
+            "title": "Paris In Motion",
+            "summary": "A cinematic map tour.",
+            "autoplay": true,
+            "stops": [
+              {
+                "id": "paris-stop-1",
+                "title": "Stop 1",
+                "subtitle": "First stop",
+                "coordinate": {
+                  "latitude": 48.8584,
+                  "longitude": 2.2945
+                },
+                "lookAroundCoordinate": {
+                  "latitude": 48.8584,
+                  "longitude": 2.2945
+                },
+                "keyframes": [
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.8584,
+                      "longitude": 2.2945
+                    },
+                    "distanceMeters": 6000,
+                    "pitchDegrees": 48,
+                    "headingDegrees": 20,
+                    "durationSeconds": 1.2
+                  },
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.859,
+                      "longitude": 2.295
+                    },
+                    "distanceMeters": 2200,
+                    "pitchDegrees": 62,
+                    "headingDegrees": 50,
+                    "durationSeconds": 1.3
+                  },
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.8584,
+                      "longitude": 2.2945
+                    },
+                    "distanceMeters": 900,
+                    "pitchDegrees": 72,
+                    "headingDegrees": 110,
+                    "durationSeconds": 1.1
+                  }
+                ]
+              },
+              {
+                "id": "paris-stop-2",
+                "title": "Stop 2",
+                "subtitle": "Second stop",
+                "coordinate": {
+                  "latitude": 48.8534,
+                  "longitude": 2.3332
+                },
+                "keyframes": [
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.8534,
+                      "longitude": 2.3332
+                    },
+                    "distanceMeters": 5200,
+                    "pitchDegrees": 46,
+                    "headingDegrees": 298,
+                    "durationSeconds": 1.2
+                  },
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.8541,
+                      "longitude": 2.3346
+                    },
+                    "distanceMeters": 1800,
+                    "pitchDegrees": 60,
+                    "headingDegrees": 328,
+                    "durationSeconds": 1.4
+                  },
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.8537,
+                      "longitude": 2.3339
+                    },
+                    "distanceMeters": 780,
+                    "pitchDegrees": 74,
+                    "headingDegrees": 12,
+                    "durationSeconds": 1.2
+                  }
+                ]
+              },
+              {
+                "id": "paris-stop-3",
+                "title": "Stop 3",
+                "subtitle": "Third stop",
+                "coordinate": {
+                  "latitude": 48.8867,
+                  "longitude": 2.3431
+                },
+                "keyframes": [
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.8867,
+                      "longitude": 2.3431
+                    },
+                    "distanceMeters": 6000,
+                    "pitchDegrees": 50,
+                    "headingDegrees": 200,
+                    "durationSeconds": 1.3
+                  },
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.8862,
+                      "longitude": 2.3442
+                    },
+                    "distanceMeters": 2100,
+                    "pitchDegrees": 66,
+                    "headingDegrees": 222,
+                    "durationSeconds": 1.5
+                  },
+                  {
+                    "centerCoordinate": {
+                      "latitude": 48.8867,
+                      "longitude": 2.3431
+                    },
+                    "distanceMeters": 900,
+                    "pitchDegrees": 78,
+                    "headingDegrees": 258,
+                    "durationSeconds": 1.2
+                  }
+                ]
+              }
+            ]
+          },
           "stories": [
             {
               "id": "paris-story-1",
@@ -158,6 +292,8 @@ final class ContractDecodingTests: XCTestCase {
         XCTAssertEqual(profile.destination.id, "dest_paris")
         XCTAssertEqual(profile.details.count, 4)
         XCTAssertEqual(profile.stories.count, 8)
+        XCTAssertEqual(profile.mapTour?.stops.count, 3)
+        XCTAssertEqual(profile.mapTour?.stops[0].keyframes.count, 3)
         XCTAssertEqual(profile.stories[0].category, "Dining")
     }
 

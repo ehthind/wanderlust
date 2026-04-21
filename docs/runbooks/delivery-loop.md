@@ -17,7 +17,8 @@ This repo is designed for a full autonomous delivery loop with PR-first gates.
 7. Convert the PR to ready and move the issue to `Human Review` once the local validation gate is green.
 8. After approval, move the issue to `Merging`.
 9. Let the Symphony `land` skill watch checks, resolve drift, and squash-merge into `main`.
-10. Move the Linear issue to `Done` after merge lands on `main`.
+10. Let the `main` branch release job run `semantic-release` and publish the labeled release assets for that squash merge.
+11. Move the Linear issue to `Done` after merge lands on `main`.
 
 ## PR repair loop
 - Same-repo PRs can be watched by the GitHub App worker defined by `WORKFLOW.pr.md`.
@@ -31,6 +32,11 @@ This repo is designed for a full autonomous delivery loop with PR-first gates.
 - If local validation fails, do not progress to PR readiness.
 - If CI or branch protection fails, leave the issue in `In Progress`.
 - If delivery is blocked, record the blocker in `.symphony/run.json` and `.symphony/proof.json`.
+
+## Release history contract
+- Pull request titles should use conventional commit types because squash merges feed `semantic-release` on `main`.
+- Release assets should stay legible at a glance and include the semantic version plus the released commit SHA.
+- The release history runbook lives in [`docs/runbooks/release-history.md`](./release-history.md).
 
 ## Current GitHub settings
 - Default branch: `main`

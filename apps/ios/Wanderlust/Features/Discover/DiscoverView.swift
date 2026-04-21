@@ -4,6 +4,7 @@ import UIKit
 private enum DiscoverViewLayout {
     static let cardScrollAnimationDuration = 0.28
     static let guideDismissSwipeThreshold: CGFloat = 90
+    static let guideDismissSwipeActivationWidth: CGFloat = 32
     static let errorBannerHorizontalPadding: CGFloat = 16
     static let errorBannerVerticalPadding: CGFloat = 12
     static let errorBannerBottomPadding: CGFloat = 16
@@ -11,10 +12,21 @@ private enum DiscoverViewLayout {
     static let feedContentSpacing: CGFloat = 18
     static let feedHorizontalPadding: CGFloat = 24
     static let feedBodyLineSpacing: CGFloat = 8
+    static let floatingActionReservedWidth: CGFloat = 98
+}
+
+private struct DiscoverChromeContext: Equatable {
+    let destinationId: String
+    let isSaved: Bool
+    let isPlanning: Bool
+    let isEnabled: Bool
+    let saveAccessibilityIdentifier: String
+    let accessibilityIdentifier: String
 }
 
 struct DiscoverView: View {
     @ObservedObject var appState: AppState
+    @ObservedObject var chromeState: DiscoverChromeState
     @StateObject private var viewModel: DiscoverViewModel
     @State private var feedScrollTarget: String?
     @State private var activeDestinationId: String?
@@ -22,8 +34,9 @@ struct DiscoverView: View {
     @Binding private var isGuidePresented: Bool
     @Environment(\.wanderlustBottomShellMetrics) private var bottomShellMetrics
 
-    init(appState: AppState, isGuidePresented: Binding<Bool>) {
+    init(appState: AppState, isGuidePresented: Binding<Bool>, chromeState: DiscoverChromeState) {
         self.appState = appState
+        self.chromeState = chromeState
         _isGuidePresented = isGuidePresented
         _viewModel = StateObject(
             wrappedValue: DiscoverViewModel(
@@ -73,12 +86,21 @@ struct DiscoverView: View {
             await viewModel.loadIfNeeded()
             feedScrollTarget = viewModel.currentCard?.destination.id
             displayedDestinationId = viewModel.currentCard?.destination.id
+            syncChromeState()
         }
         .onAppear {
             isGuidePresented = activeDestinationId != nil
+            syncChromeState()
         }
         .onChange(of: activeDestinationId) { _, newValue in
             isGuidePresented = newValue != nil
+        }
+        .onChange(of: currentChromeContext) { _, _ in
+            syncChromeState()
+        }
+        .onDisappear {
+            chromeState.saveCallToAction = nil
+            chromeState.planTripCallToAction = nil
         }
     }
 
@@ -94,6 +116,47 @@ struct DiscoverView: View {
         withAnimation(.easeInOut(duration: DiscoverViewLayout.cardScrollAnimationDuration)) {
             activeDestinationId = nil
         }
+    }
+
+    private var currentChromeContext: DiscoverChromeContext? {
+        guard let currentCard = viewModel.currentCard else { return nil }
+
+        let destinationId = currentCard.destination.id
+        return DiscoverChromeContext(
+            destinationId: destinationId,
+            isSaved: viewModel.isSaved(destinationId: destinationId),
+            isPlanning: viewModel.isPlanning && viewModel.currentCard?.destination.id == destinationId,
+            isEnabled: viewModel.currentCard?.destination.id == destinationId && !viewModel.isPlanning,
+            saveAccessibilityIdentifier: "discover.saveButton.\(destinationId)",
+            accessibilityIdentifier: "discover.planTripButton.\(destinationId)"
+        )
+    }
+
+    private func syncChromeState() {
+        guard let currentChromeContext else {
+            chromeState.saveCallToAction = nil
+            chromeState.planTripCallToAction = nil
+            return
+        }
+
+        chromeState.saveCallToAction = DiscoverChromeState.SaveCallToAction(
+            isSaved: currentChromeContext.isSaved,
+            accessibilityIdentifier: currentChromeContext.saveAccessibilityIdentifier,
+            action: {
+                viewModel.toggleSaved(destinationId: currentChromeContext.destinationId)
+            }
+        )
+
+        chromeState.planTripCallToAction = DiscoverChromeState.PlanTripCallToAction(
+            isPlanning: currentChromeContext.isPlanning,
+            isEnabled: currentChromeContext.isEnabled,
+            accessibilityIdentifier: currentChromeContext.accessibilityIdentifier,
+            action: {
+                Task {
+                    await viewModel.planTrip(destinationId: currentChromeContext.destinationId)
+                }
+            }
+        )
     }
 }
 
@@ -118,6 +181,7 @@ private struct DiscoverDestinationGuideOverlay: View {
             DragGesture(minimumDistance: 24)
                 .onEnded { value in
                     guard
+                        value.startLocation.x <= DiscoverViewLayout.guideDismissSwipeActivationWidth,
                         value.translation.width >= DiscoverViewLayout.guideDismissSwipeThreshold,
                         abs(value.translation.width) > abs(value.translation.height)
                     else {
@@ -198,18 +262,8 @@ private struct DiscoverFeedSurface: View {
                                     card: card,
                                     pageSize: pageSize,
                                     bottomContentInset: feedCardBottomInset,
-                                    isSaved: viewModel.isSaved(destinationId: card.destination.id),
                                     isDisplayed: displayedDestinationId == card.destination.id,
-                                    isCurrent: viewModel.currentCard?.destination.id == card.destination.id,
-                                    isPlanning: viewModel.isPlanning && viewModel.currentCard?.destination.id == card.destination.id,
-                                    onToggleSaved: {
-                                        viewModel.toggleSaved(destinationId: card.destination.id)
-                                    },
-                                    onPlanTrip: {
-                                        Task {
-                                            await viewModel.planTrip(destinationId: card.destination.id)
-                                        }
-                                    }
+                                    isCurrent: viewModel.currentCard?.destination.id == card.destination.id
                                 )
                                 .id(card.destination.id)
                             }
@@ -288,12 +342,8 @@ private struct DiscoverFeedCard: View {
     let card: FeaturedDiscoverCard
     let pageSize: CGSize
     let bottomContentInset: CGFloat
-    let isSaved: Bool
     let isDisplayed: Bool
     let isCurrent: Bool
-    let isPlanning: Bool
-    let onToggleSaved: () -> Void
-    let onPlanTrip: () -> Void
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -325,14 +375,7 @@ private struct DiscoverFeedCard: View {
                         .foregroundStyle(Color.white.opacity(0.86))
                         .lineSpacing(DiscoverViewLayout.feedBodyLineSpacing)
                         .fixedSize(horizontal: false, vertical: true)
-
-                    HStack(alignment: .center) {
-                        saveButton
-
-                        Spacer()
-
-                        planTripButton
-                    }
+                        .padding(.trailing, DiscoverViewLayout.floatingActionReservedWidth)
                 }
                 .padding(.horizontal, DiscoverViewLayout.feedHorizontalPadding)
                 .padding(.bottom, DiscoverViewLayout.feedBottomChromePadding + bottomContentInset)
@@ -355,27 +398,6 @@ private struct DiscoverFeedCard: View {
                 .accessibilityIdentifier("discover.card.\(card.destination.id)")
         }
     }
-
-    private var saveButton: some View {
-        DiscoverSaveButton(
-            isSaved: isSaved,
-            label: card.cues.secondaryAction,
-            fontWeight: .light,
-            accessibilityIdentifier: "discover.saveButton.\(card.destination.id)",
-            onTap: onToggleSaved
-        )
-    }
-
-    private var planTripButton: some View {
-        DiscoverPlanTripButton(
-            title: card.cues.primaryAction,
-            isPlanning: isPlanning,
-            fontWeight: .light,
-            isEnabled: isCurrent && !isPlanning,
-            accessibilityIdentifier: "discover.planTripButton.\(card.destination.id)",
-            onTap: onPlanTrip
-        )
-    }
 }
 
 private struct DiscoverPreviewContainer: View {
@@ -385,10 +407,15 @@ private struct DiscoverPreviewContainer: View {
         lastTripStore: DiscoverPreviewLastTripStore(),
         savedDestinationsStore: DiscoverPreviewSavedDestinationsStore()
     )
+    @StateObject private var chromeState = DiscoverChromeState()
     @State private var isGuidePresented = false
 
     var body: some View {
-        DiscoverView(appState: appState, isGuidePresented: $isGuidePresented)
+        DiscoverView(
+            appState: appState,
+            isGuidePresented: $isGuidePresented,
+            chromeState: chromeState
+        )
     }
 }
 

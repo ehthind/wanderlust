@@ -80,6 +80,35 @@ export const destinationProfileDetailSchema = z.object({
   value: z.string(),
 });
 
+export const destinationMapCoordinateSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
+export const destinationMapCameraKeyframeSchema = z.object({
+  centerCoordinate: destinationMapCoordinateSchema,
+  distanceMeters: z.number().positive(),
+  pitchDegrees: z.number().min(0).max(90),
+  headingDegrees: z.number(),
+  durationSeconds: z.number().positive(),
+});
+
+export const destinationMapTourStopSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  subtitle: z.string(),
+  coordinate: destinationMapCoordinateSchema,
+  lookAroundCoordinate: destinationMapCoordinateSchema.optional(),
+  keyframes: z.array(destinationMapCameraKeyframeSchema).min(3).max(5),
+});
+
+export const destinationMapTourViewSchema = z.object({
+  title: z.string(),
+  summary: z.string(),
+  autoplay: z.boolean(),
+  stops: z.array(destinationMapTourStopSchema).length(3),
+});
+
 export const destinationProfileStoryCardSchema = z.object({
   id: z.string(),
   category: z.string(),
@@ -92,6 +121,7 @@ export const destinationProfileViewSchema = z.object({
   destination: destinationSummarySchema,
   details: z.array(destinationProfileDetailSchema).length(4),
   stories: z.array(destinationProfileStoryCardSchema).length(8),
+  mapTour: destinationMapTourViewSchema.optional(),
 });
 
 export const tripExecutionSchema = z.object({
@@ -187,6 +217,10 @@ export type DestinationSummary = z.infer<typeof destinationSummarySchema>;
 export type FeaturedDiscoverCard = z.infer<typeof featuredDiscoverCardSchema>;
 export type DiscoverFeedView = z.infer<typeof discoverFeedViewSchema>;
 export type DestinationProfileDetail = z.infer<typeof destinationProfileDetailSchema>;
+export type DestinationMapCoordinate = z.infer<typeof destinationMapCoordinateSchema>;
+export type DestinationMapCameraKeyframe = z.infer<typeof destinationMapCameraKeyframeSchema>;
+export type DestinationMapTourStop = z.infer<typeof destinationMapTourStopSchema>;
+export type DestinationMapTourView = z.infer<typeof destinationMapTourViewSchema>;
 export type DestinationProfileStoryCard = z.infer<typeof destinationProfileStoryCardSchema>;
 export type DestinationProfileView = z.infer<typeof destinationProfileViewSchema>;
 export type TripDraft = z.infer<typeof tripDraftSchema>;

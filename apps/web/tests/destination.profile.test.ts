@@ -41,6 +41,34 @@ describe("GET /api/destinations/[destinationId]", () => {
         imageUrl: `https://example.test/story-${index}.jpg`,
         imageAccessibilityLabel: `Story ${index} image`,
       })),
+      mapTour: {
+        title: "Paris In Motion",
+        summary: "A cinematic map tour.",
+        autoplay: true,
+        stops: Array.from({ length: 3 }, (_, index) => ({
+          id: `stop_${index}`,
+          title: `Stop ${index}`,
+          subtitle: `Subtitle ${index}`,
+          coordinate: {
+            latitude: 48.85 + index * 0.01,
+            longitude: 2.29 + index * 0.01,
+          },
+          lookAroundCoordinate: {
+            latitude: 48.85 + index * 0.01,
+            longitude: 2.29 + index * 0.01,
+          },
+          keyframes: Array.from({ length: 3 }, (_, keyframeIndex) => ({
+            centerCoordinate: {
+              latitude: 48.85 + index * 0.01,
+              longitude: 2.29 + index * 0.01,
+            },
+            distanceMeters: 1000 + keyframeIndex * 500,
+            pitchDegrees: 45 + keyframeIndex * 5,
+            headingDegrees: keyframeIndex * 30,
+            durationSeconds: 1.2,
+          })),
+        })),
+      },
     });
 
     const { GET } = await import("../src/app/api/destinations/[destinationId]/route");
@@ -55,6 +83,8 @@ describe("GET /api/destinations/[destinationId]", () => {
       expect(payload.details[0]).toMatchObject({ label: "Best season" });
       expect(payload.stories).toHaveLength(8);
       expect(payload.stories[0]).toMatchObject({ id: "story_0" });
+      expect(payload.mapTour.stops).toHaveLength(3);
+      expect(payload.mapTour.stops[0]).toMatchObject({ id: "stop_0" });
       return true;
     });
   });

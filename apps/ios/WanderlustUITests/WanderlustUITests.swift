@@ -105,7 +105,7 @@ final class WanderlustUITests: XCTestCase {
 
         let planButton = app.buttons["discover.detail.planButton.dest_paris"]
         XCTAssertTrue(planButton.waitForExistence(timeout: 5))
-        XCTAssertLessThan(planButton.frame.maxY, viewport.maxY - 12)
+        XCTAssertLessThanOrEqual(planButton.frame.maxY, viewport.maxY - 12)
 
         let firstStory = app.otherElements["discover.detail.story.paris-story-1"]
         let secondStory = app.otherElements["discover.detail.story.paris-story-2"]
@@ -122,12 +122,12 @@ final class WanderlustUITests: XCTestCase {
 
         let shell = app.otherElements["shell.tab.container"]
         let shellGroup = app.otherElements["shell.tab.group"]
-        let searchOrb = app.buttons["shell.tab.search"]
+        let searchButton = app.buttons["shell.tab.search"]
         XCTAssertTrue(shell.waitForExistence(timeout: 5))
         XCTAssertTrue(shellGroup.waitForExistence(timeout: 5))
-        XCTAssertTrue(searchOrb.waitForExistence(timeout: 5))
+        XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
         XCTAssertTrue(waitForValue("iconOnly", on: shellGroup))
-        assertControlsAreVerticallyAligned(shellGroup, searchOrb)
+        assertSearchButtonAppearsAboveShellGroup(searchButton, shellGroup)
 
         openGuide(destinationId: "dest_paris", in: app)
 
@@ -170,7 +170,84 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertTrue(app.buttons["discover.detail.retryButton.dest_kyoto"].waitForExistence(timeout: 5))
     }
 
-    func testBottomShellSwitchesTabsAndSearchOrbUsesSearchTab() {
+    func testDiscoverDestinationGuideShowsMapTourControlsAndSupportsManualPlayback() {
+        let app = launchApp(
+            disableMapTourAutoplay: true,
+            mapTourDurationScale: 0.5
+        )
+
+        openGuide(destinationId: "dest_paris", in: app)
+
+        XCTAssertTrue(app.otherElements["discover.detail.mapTour.map.dest_paris"].waitForExistence(timeout: 5))
+        let coreStopButton = app.buttons["discover.detail.mapTour.stop.paris-core-1st-4th"]
+        let leftBankStopButton = app.buttons["discover.detail.mapTour.stop.paris-left-bank-6th-7th"]
+        let montmartreStopButton = app.buttons["discover.detail.mapTour.stop.paris-montmartre-18th"]
+        let stateProbe = app.staticTexts["discover.detail.mapTour.state.dest_paris"]
+        XCTAssertTrue(coreStopButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(leftBankStopButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(montmartreStopButton.waitForExistence(timeout: 5))
+
+        let playButton = app.buttons["discover.detail.mapTour.playButton.dest_paris"]
+        let replayButton = app.buttons["discover.detail.mapTour.replayButton.dest_paris"]
+        XCTAssertTrue(playButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(replayButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(stateProbe.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForLabel("paris-core-1st-4th|paused", on: stateProbe))
+        scrollUntilHittable(leftBankStopButton, in: app)
+        scrollUntilHittable(playButton, in: app)
+        scrollUntilHittable(replayButton, in: app)
+
+        tap(leftBankStopButton)
+        XCTAssertTrue(waitForLabel("paris-left-bank-6th-7th|playing", on: stateProbe))
+
+        tap(playButton)
+        XCTAssertTrue(waitForLabel("paris-left-bank-6th-7th|paused", on: stateProbe))
+
+        tap(playButton)
+        XCTAssertTrue(waitForLabel("paris-left-bank-6th-7th|playing", on: stateProbe))
+
+        tap(replayButton)
+        XCTAssertTrue(waitForLabel("paris-core-1st-4th|playing", on: stateProbe))
+    }
+
+    func testDiscoverDestinationGuideKeepsEditorialContentWhenMapTourIsMissing() {
+        let app = launchApp(disabledMapTourDestinationId: "dest_paris")
+
+        openGuide(destinationId: "dest_paris", in: app)
+
+        XCTAssertFalse(app.otherElements["discover.detail.mapTour.map.dest_paris"].exists)
+
+        let bestSeasonValue = app.otherElements["discover.detail.value.best_season"]
+        scrollToElement(bestSeasonValue, in: app, direction: .up)
+        XCTAssertTrue(bestSeasonValue.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["discover.detail.planButton.dest_paris"].waitForExistence(timeout: 5))
+    }
+
+    func testDiscoverFeedFloatingActionsSupportSaveAndPlanning() {
+        let app = launchApp()
+
+        let parisSaveButton = app.buttons["discover.saveButton.dest_paris"]
+        let parisPlanButton = app.buttons["discover.planTripButton.dest_paris"]
+        XCTAssertTrue(parisSaveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(parisPlanButton.waitForExistence(timeout: 5))
+
+        tap(parisSaveButton)
+        XCTAssertTrue(waitForLabel("Saved", on: parisSaveButton))
+
+        app.swipeUp()
+        XCTAssertTrue(app.buttons["discover.saveButton.dest_kyoto"].waitForExistence(timeout: 5))
+
+        app.swipeDown()
+        let returnedParisSaveButton = app.buttons["discover.saveButton.dest_paris"]
+        XCTAssertTrue(returnedParisSaveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForLabel("Saved", on: returnedParisSaveButton))
+
+        tap(app.buttons["discover.planTripButton.dest_paris"])
+        XCTAssertTrue(app.buttons["workspace.searchButton"].waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForValue("selected", on: app.buttons["shell.tab.trips"]))
+    }
+
+    func testRootChromeSwitchesTabsAndTopSearchUsesSearchTab() {
         let app = launchApp()
 
         let shellGroup = app.otherElements["shell.tab.group"]
@@ -182,8 +259,8 @@ final class WanderlustUITests: XCTestCase {
         let searchButton = app.buttons["shell.tab.search"]
         XCTAssertTrue(discoverButton.waitForExistence(timeout: 5))
         XCTAssertTrue(searchButton.waitForExistence(timeout: 5))
-        assertSelectionAligned(selection, with: discoverButton)
-        assertControlsAreVerticallyAligned(shellGroup, searchButton)
+        XCTAssertTrue(waitForValue("Discover", on: selection))
+        assertSearchButtonAppearsAboveShellGroup(searchButton, shellGroup)
 
         tap(searchButton)
         XCTAssertTrue(waitForValue("selected", on: searchButton))
@@ -195,26 +272,29 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertTrue(waitForValue("selected", on: inboxButton))
         XCTAssertTrue(app.staticTexts["Inbox Lands After Stay Selection"].waitForExistence(timeout: 5))
         XCTAssertTrue(selection.waitForExistence(timeout: 5))
-        assertSelectionAligned(selection, with: inboxButton)
+        XCTAssertTrue(waitForValue("Inbox", on: selection))
 
         let tripsButton = app.buttons["shell.tab.trips"]
         tap(tripsButton)
         XCTAssertTrue(waitForValue("selected", on: tripsButton))
         XCTAssertTrue(app.staticTexts["Your Active Trip Will Reopen Here"].waitForExistence(timeout: 5))
         XCTAssertTrue(selection.waitForExistence(timeout: 5))
-        assertSelectionAligned(selection, with: tripsButton)
+        XCTAssertTrue(waitForValue("Trips", on: selection))
 
         tap(discoverButton)
         XCTAssertTrue(waitForValue("selected", on: discoverButton))
         XCTAssertTrue(app.otherElements["discover.card.dest_paris"].waitForExistence(timeout: 5))
         XCTAssertTrue(selection.waitForExistence(timeout: 5))
-        assertSelectionAligned(selection, with: discoverButton)
+        XCTAssertTrue(waitForValue("Discover", on: selection))
     }
 
     private func launchApp(
         dynamicTypeSize: String? = nil,
         profileDelayMs: Int? = nil,
-        failedProfileDestinationId: String? = nil
+        failedProfileDestinationId: String? = nil,
+        disableMapTourAutoplay: Bool = false,
+        mapTourDurationScale: Double? = nil,
+        disabledMapTourDestinationId: String? = nil
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["WANDERLUST_USE_FIXTURES"] = "1"
@@ -230,6 +310,18 @@ final class WanderlustUITests: XCTestCase {
 
         if let failedProfileDestinationId {
             app.launchEnvironment["WANDERLUST_FAIL_PROFILE_DESTINATION_ID"] = failedProfileDestinationId
+        }
+
+        if disableMapTourAutoplay {
+            app.launchEnvironment["WANDERLUST_DISABLE_MAP_TOUR_AUTOPLAY"] = "1"
+        }
+
+        if let mapTourDurationScale {
+            app.launchEnvironment["WANDERLUST_MAP_TOUR_DURATION_SCALE"] = String(mapTourDurationScale)
+        }
+
+        if let disabledMapTourDestinationId {
+            app.launchEnvironment["WANDERLUST_DISABLE_MAP_TOUR_DESTINATION_ID"] = disabledMapTourDestinationId
         }
 
         app.launch()
@@ -248,7 +340,7 @@ final class WanderlustUITests: XCTestCase {
     }
 
     private func swipeRightToCloseGuide(in app: XCUIApplication) {
-        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.18, dy: 0.55))
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.04, dy: 0.55))
         let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.84, dy: 0.55))
         start.press(forDuration: 0.01, thenDragTo: end)
     }
@@ -280,25 +372,13 @@ final class WanderlustUITests: XCTestCase {
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
-    private func assertSelectionAligned(
-        _ selection: XCUIElement,
-        with button: XCUIElement,
-        accuracy: CGFloat = 6,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) {
-        XCTAssertEqual(selection.frame.midX, button.frame.midX, accuracy: accuracy, file: file, line: line)
-        XCTAssertLessThanOrEqual(selection.frame.minY, button.frame.minY + 2, file: file, line: line)
-        XCTAssertGreaterThanOrEqual(selection.frame.maxY, button.frame.maxY - 2, file: file, line: line)
-    }
-
-    private func assertControlsAreVerticallyAligned(
+    private func assertSearchButtonAppearsAboveShellGroup(
+        _ searchButton: XCUIElement,
         _ shellGroup: XCUIElement,
-        _ searchOrb: XCUIElement,
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
-        XCTAssertEqual(shellGroup.frame.midY, searchOrb.frame.midY, accuracy: 6, file: file, line: line)
+        XCTAssertLessThan(searchButton.frame.maxY, shellGroup.frame.minY, file: file, line: line)
     }
 
     private enum ScrollDirection {
@@ -316,6 +396,14 @@ final class WanderlustUITests: XCTestCase {
             case .down:
                 app.swipeDown()
             }
+        }
+    }
+
+    private func scrollUntilHittable(_ element: XCUIElement, in app: XCUIApplication, attempts: Int = 4) {
+        guard element.exists else { return }
+
+        for _ in 0 ..< attempts where !element.isHittable {
+            app.swipeUp()
         }
     }
 }

@@ -37,5 +37,6 @@ export const getDestinationProfileView = (destinationId: string) => {
     destination: model.destination,
     details: model.details,
     stories: model.stories,
+    mapTour: model.mapTour,
   };
 };

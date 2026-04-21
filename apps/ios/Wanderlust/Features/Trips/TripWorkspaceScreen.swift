@@ -52,6 +52,7 @@ struct TripWorkspaceScreen: View {
                         }
                     }
                     .padding(24)
+                    .padding(.top, bottomShellMetrics.topContentInset)
                     .padding(.bottom, bottomShellMetrics.contentInset)
                 }
             }

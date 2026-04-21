@@ -9,12 +9,16 @@ playwright-report
 test-results
 .env
 .env.local
+.release-artifacts
+.release-inputs
 *.tsbuildinfo
 supabase/config.toml
 supabase/.branches/
 supabase/.temp/
 .DS_Store
 .temporal
+*.xcuserstate
+**/xcuserdata/
 .symphony/*.json
 .symphony/*.log
 .symphony/workspaces/*

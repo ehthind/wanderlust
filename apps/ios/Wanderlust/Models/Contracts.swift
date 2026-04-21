@@ -79,6 +79,39 @@ struct DestinationProfileDetail: Codable, Equatable, Identifiable {
     let value: String
 }
 
+struct DestinationMapCoordinate: Codable, Equatable {
+    let latitude: Double
+    let longitude: Double
+}
+
+struct DestinationMapCameraKeyframe: Codable, Equatable, Identifiable {
+    var id: String {
+        "\(centerCoordinate.latitude)-\(centerCoordinate.longitude)-\(distanceMeters)-\(headingDegrees)"
+    }
+
+    let centerCoordinate: DestinationMapCoordinate
+    let distanceMeters: Double
+    let pitchDegrees: Double
+    let headingDegrees: Double
+    let durationSeconds: Double
+}
+
+struct DestinationMapTourStop: Codable, Equatable, Identifiable {
+    let id: String
+    let title: String
+    let subtitle: String
+    let coordinate: DestinationMapCoordinate
+    let lookAroundCoordinate: DestinationMapCoordinate?
+    let keyframes: [DestinationMapCameraKeyframe]
+}
+
+struct DestinationMapTourView: Codable, Equatable {
+    let title: String
+    let summary: String
+    let autoplay: Bool
+    let stops: [DestinationMapTourStop]
+}
+
 struct DestinationProfileStoryCard: Codable, Equatable, Identifiable {
     let id: String
     let category: String
@@ -91,6 +124,7 @@ struct DestinationProfileView: Codable, Equatable {
     let destination: DestinationSummary
     let details: [DestinationProfileDetail]
     let stories: [DestinationProfileStoryCard]
+    let mapTour: DestinationMapTourView?
 }
 
 struct PlanTripInput: Codable, Equatable {

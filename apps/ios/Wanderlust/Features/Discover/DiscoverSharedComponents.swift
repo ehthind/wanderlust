@@ -2,11 +2,8 @@ import SwiftUI
 import UIKit
 
 private enum DiscoverSharedLayout {
-    static let buttonWidth: CGFloat = 148
-    static let buttonHeight: CGFloat = 52
-    static let buttonHorizontalPadding: CGFloat = 16
-    static let buttonContentSpacing: CGFloat = 10
-    static let buttonCornerRadius: CGFloat = 16
+    static let buttonHeight: CGFloat = 46
+    static let iconButtonSize: CGFloat = 46
     static let subtleStrokeWidth: CGFloat = 1
     static let heroFallbackGradientStartRadius: CGFloat = 40
     static let heroFallbackGradientEndRadius: CGFloat = 420
@@ -14,101 +11,168 @@ private enum DiscoverSharedLayout {
 
 struct DiscoverSaveButton: View {
     let isSaved: Bool
-    let label: String
     let fontWeight: Font.Weight
-    let width: CGFloat
     let accessibilityIdentifier: String?
     let onTap: () -> Void
 
     init(
         isSaved: Bool,
-        label: String,
         fontWeight: Font.Weight,
-        width: CGFloat = DiscoverSharedLayout.buttonWidth,
         accessibilityIdentifier: String?,
         onTap: @escaping () -> Void
     ) {
         self.isSaved = isSaved
-        self.label = label
         self.fontWeight = fontWeight
-        self.width = width
         self.accessibilityIdentifier = accessibilityIdentifier
         self.onTap = onTap
     }
 
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: DiscoverSharedLayout.buttonContentSpacing) {
-                Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
-                    .font(.system(size: 18, weight: fontWeight))
-
-                Text(isSaved ? "Saved" : label)
-                    .font(.system(size: 16, weight: fontWeight, design: .default))
+        Group {
+            if #available(iOS 26.0, *) {
+                Button(action: onTap) {
+                    icon
+                }
+                .buttonBorderShape(.circle)
+                .tint(isSaved ? savedTint : clearTint)
+                .if(isSaved) { view in
+                    view.buttonStyle(.glassProminent)
+                }
+                .if(!isSaved) { view in
+                    view.buttonStyle(.glass)
+                }
+            } else {
+                Button(action: onTap) {
+                    icon
+                }
+                .buttonStyle(.plain)
+                .background {
+                    Circle()
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            if isSaved {
+                                Circle()
+                                    .fill(savedTint.opacity(colorScheme == .dark ? 0.3 : 0.4))
+                            }
+                        }
+                        .overlay {
+                            Circle()
+                                .strokeBorder(
+                                    isSaved ? savedStrokeColor : outlineColor,
+                                    lineWidth: DiscoverSharedLayout.subtleStrokeWidth
+                                )
+                        }
+                }
             }
-            .foregroundStyle(Color.white.opacity(isSaved ? 0.96 : 0.74))
-            .padding(.horizontal, DiscoverSharedLayout.buttonHorizontalPadding)
-            .frame(width: width, height: DiscoverSharedLayout.buttonHeight, alignment: .leading)
-            .background(
-                Color.white.opacity(0.06),
-                in: RoundedRectangle(
-                    cornerRadius: DiscoverSharedLayout.buttonCornerRadius,
-                    style: .continuous
-                )
-            )
         }
-        .buttonStyle(.plain)
+        .frame(
+            width: DiscoverSharedLayout.iconButtonSize,
+            height: DiscoverSharedLayout.iconButtonSize
+        )
+        .contentShape(Circle())
         .accessibilityLabel(isSaved ? "Saved" : "Save")
         .accessibilityValue(isSaved ? "saved" : "unsaved")
         .accessibilityIdentifier(accessibilityIdentifier ?? "")
     }
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var icon: some View {
+        Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+            .font(.system(size: 18, weight: fontWeight))
+            .foregroundStyle(isSaved ? Color.primary : Color.secondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var clearTint: Color {
+        colorScheme == .dark ? Color.white.opacity(0.03) : Color.white.opacity(0.06)
+    }
+
+    private var savedTint: Color {
+        Color(red: 0.95, green: 0.92, blue: 0.85).opacity(colorScheme == .dark ? 0.15 : 0.22)
+    }
+
+    private var outlineColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
+    }
+
+    private var savedStrokeColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.12) : Color.white.opacity(0.2)
+    }
 }
 
 struct DiscoverPlanTripButton: View {
-    let title: String
     let isPlanning: Bool
-    let fontWeight: Font.Weight
-    let width: CGFloat
     let isEnabled: Bool
     let accessibilityIdentifier: String?
     let onTap: () -> Void
 
     init(
-        title: String,
         isPlanning: Bool,
-        fontWeight: Font.Weight,
-        width: CGFloat = DiscoverSharedLayout.buttonWidth,
         isEnabled: Bool,
         accessibilityIdentifier: String?,
         onTap: @escaping () -> Void
     ) {
-        self.title = title
         self.isPlanning = isPlanning
-        self.fontWeight = fontWeight
-        self.width = width
         self.isEnabled = isEnabled
         self.accessibilityIdentifier = accessibilityIdentifier
         self.onTap = onTap
     }
 
     var body: some View {
-        Button(action: onTap) {
-            Text(isPlanning ? "Building Trip..." : title)
-                .font(.system(size: 16, weight: fontWeight, design: .default))
-                .foregroundStyle(Color.white.opacity(0.92))
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black.opacity(0.01), in: Capsule(style: .continuous))
-                .overlay {
-                    Capsule(style: .continuous)
-                        .strokeBorder(
-                            Color.white.opacity(0.34),
-                            lineWidth: DiscoverSharedLayout.subtleStrokeWidth
-                        )
+        Group {
+            if #available(iOS 26.0, *) {
+                Button(action: onTap) {
+                    icon
                 }
+                .buttonBorderShape(.circle)
+                .buttonStyle(.glass)
+                .tint(clearTint)
+            } else {
+                Button(action: onTap) {
+                    icon
+                }
+                .buttonStyle(.plain)
+                .background {
+                    Circle()
+                        .fill(.ultraThinMaterial)
+                        .overlay {
+                            Circle()
+                                .strokeBorder(outlineColor, lineWidth: DiscoverSharedLayout.subtleStrokeWidth)
+                        }
+                }
+            }
         }
-        .frame(width: width, height: DiscoverSharedLayout.buttonHeight)
-        .buttonStyle(.plain)
+        .frame(width: DiscoverSharedLayout.iconButtonSize, height: DiscoverSharedLayout.iconButtonSize)
+        .contentShape(Circle())
         .disabled(!isEnabled)
+        .accessibilityLabel("Plan Trip")
+        .accessibilityValue(isPlanning ? "planning" : "ready")
         .accessibilityIdentifier(accessibilityIdentifier ?? "")
+    }
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var icon: some View {
+        Group {
+            if isPlanning {
+                ProgressView()
+                    .tint(.primary)
+            } else {
+                Image(systemName: "airplane")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(Color.primary)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var clearTint: Color {
+        colorScheme == .dark ? Color.white.opacity(0.04) : Color.white.opacity(0.07)
+    }
+
+    private var outlineColor: Color {
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
     }
 }
 
@@ -156,6 +220,17 @@ struct DiscoverHeroImage: View {
                 )
         }
         .accessibilityLabel(destination.heroImageAccessibilityLabel)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }
 
