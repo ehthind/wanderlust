@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		04FD2A29DE0207990D0175E5 /* WanderlustAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F97E3B018D8F0487E8C394B /* WanderlustAPI.swift */; };
+		0F1A2B3C4D5E6F7080910112 /* DiscoverDestinationMapTourSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1A2B3C4D5E6F7080910114 /* DiscoverDestinationMapTourSection.swift */; };
+		0F1A2B3C4D5E6F7080910113 /* DestinationMapTourFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1A2B3C4D5E6F7080910115 /* DestinationMapTourFixtures.swift */; };
 		0C4723A7F5AE4173BD743271 /* WanderlustUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCEB50C006CF356DF7B35D00 /* WanderlustUITests.swift */; };
 		1B8587971C5FC769287B4C72 /* DiscoverViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 567D0969EF0BEB58238E5FB0 /* DiscoverViewModel.swift */; };
 		2180A68897362DBF683B50ED /* SavedDestinationsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 703F08342B507811BF8490E8 /* SavedDestinationsStore.swift */; };
@@ -53,6 +55,8 @@
 
 /* Begin PBXFileReference section */
 		0ECEF5C5CF43F0320C9B1007 /* SavedDestinationsStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDestinationsStoreTests.swift; sourceTree = "<group>"; };
+		0F1A2B3C4D5E6F7080910114 /* DiscoverDestinationMapTourSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverDestinationMapTourSection.swift; sourceTree = "<group>"; };
+		0F1A2B3C4D5E6F7080910115 /* DestinationMapTourFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationMapTourFixtures.swift; sourceTree = "<group>"; };
 		1107961B08BD0A76BD43F166 /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
 		129F7B32D01B65C63D3899DA /* TripsRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripsRootView.swift; sourceTree = "<group>"; };
 		1672BE57D416FB04E13494A6 /* LastTripStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LastTripStore.swift; sourceTree = "<group>"; };
@@ -60,7 +64,7 @@
 		1C4EE4B48F701934923C710B /* TripWorkspaceViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripWorkspaceViewModelTests.swift; sourceTree = "<group>"; };
 		1F97E3B018D8F0487E8C394B /* WanderlustAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WanderlustAPI.swift; sourceTree = "<group>"; };
 		20D996785BBD925F81F7621C /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
-		51BDDC4A918E49D6E6E4A441 /* Wanderlust.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Wanderlust.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		51BDDC4A918E49D6E6E4A441 /* Wanderlust.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wanderlust.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		567D0969EF0BEB58238E5FB0 /* DiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModel.swift; sourceTree = "<group>"; };
 		5D7D3D425A047B7EE2F0B0AB /* WanderlustApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WanderlustApp.swift; sourceTree = "<group>"; };
 		647EB3D248665F85AE7CA793 /* TripWorkspaceScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripWorkspaceScreen.swift; sourceTree = "<group>"; };
@@ -112,6 +116,7 @@
 		369EDD2E79FDD46A859D0CAE /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
+				0F1A2B3C4D5E6F7080910115 /* DestinationMapTourFixtures.swift */,
 				87735EB5EF619A9917EF9A38 /* FixtureAPIService.swift */,
 			);
 			path = Fixtures;
@@ -187,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				FBFCE9A983FC99404EEFCCBA /* DiscoverDestinationDetailScreen.swift */,
+				0F1A2B3C4D5E6F7080910114 /* DiscoverDestinationMapTourSection.swift */,
 				192ACE338B77F66FF529E17C /* DiscoverSharedComponents.swift */,
 				1107961B08BD0A76BD43F166 /* DiscoverView.swift */,
 				567D0969EF0BEB58238E5FB0 /* DiscoverViewModel.swift */,
@@ -340,6 +346,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F1A2B3C4D5E6F7080910112 /* DiscoverDestinationMapTourSection.swift in Sources */,
+				0F1A2B3C4D5E6F7080910113 /* DestinationMapTourFixtures.swift in Sources */,
 				AEEB57CB1586327E388A77FC /* APIClient.swift in Sources */,
 				E250DD87B722C3EBBF741F82 /* AppEnvironment.swift in Sources */,
 				DB8A8EF2A3B628AB6D77AF9B /* AppState.swift in Sources */,
@@ -581,6 +589,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = F56V449766;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -627,6 +636,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = F56V449766;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

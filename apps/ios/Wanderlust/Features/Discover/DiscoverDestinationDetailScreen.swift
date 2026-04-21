@@ -1,6 +1,6 @@
 import SwiftUI
 
-private enum DiscoverDestinationDetailLayout {
+enum DiscoverDestinationDetailLayout {
     static let accentColor = Color(red: 0.85, green: 0.74, blue: 0.49)
     static let contentSpacing: CGFloat = 24
     static let sectionSpacing: CGFloat = 16
@@ -48,6 +48,7 @@ struct DiscoverDestinationDetailScreen: View {
             ScrollView(.vertical) {
                 LazyVStack(alignment: .leading, spacing: DiscoverDestinationDetailLayout.contentSpacing) {
                     heroSection
+                    mapTourSection
                     summarySection
                     profileStateSection
                 }
@@ -155,6 +156,16 @@ struct DiscoverDestinationDetailScreen: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var mapTourSection: some View {
+        if let mapTour = profile?.mapTour {
+            DiscoverDestinationMapTourSection(
+                destinationId: destination.id,
+                tour: mapTour
+            )
         }
     }
 
@@ -321,7 +332,7 @@ struct DiscoverDestinationDetailScreen: View {
     }
 }
 
-private struct DiscoverDestinationDetailSectionCard<Content: View>: View {
+struct DiscoverDestinationDetailSectionCard<Content: View>: View {
     @ViewBuilder let content: Content
 
     @Environment(\.colorScheme) private var colorScheme
@@ -352,7 +363,7 @@ private struct DiscoverDestinationDetailSectionCard<Content: View>: View {
     }
 }
 
-private struct DiscoverDestinationDetailSectionHeader: View {
+struct DiscoverDestinationDetailSectionHeader: View {
     let title: String
     let accentColor: Color
 
@@ -518,7 +529,8 @@ private let previewProfile = DestinationProfileView(
             imageUrl: "https://images.unsplash.com/photo-1522093007474-d86e9bf7ba6f?auto=format&fit=crop&w=1200&q=80",
             imageAccessibilityLabel: "Paris cafe tables set outside along a narrow street"
         )
-    ]
+    ],
+    mapTour: destinationMapTourFixture(for: previewDestination.id)
 )
 
 struct DiscoverDestinationDetailScreen_Previews: PreviewProvider {

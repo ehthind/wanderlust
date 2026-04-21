@@ -109,7 +109,8 @@ final class TripWorkspaceViewModelTests: XCTestCase {
                         imageUrl: "https://example.test/story-\(index).jpg",
                         imageAccessibilityLabel: "Story \(index)"
                     )
-                }
+                },
+                mapTour: nil
             )
         }
 

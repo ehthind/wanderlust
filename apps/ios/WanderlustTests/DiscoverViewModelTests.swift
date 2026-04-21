@@ -192,7 +192,8 @@ final class DiscoverViewModelTests: XCTestCase {
                         imageUrl: "https://example.test/\(destination.slug)-story-\(index).jpg",
                         imageAccessibilityLabel: "\(destination.city) story \(index)"
                     )
-                }
+                },
+                mapTour: nil
             )
         }
     }

@@ -4,6 +4,7 @@ import UIKit
 private enum DiscoverViewLayout {
     static let cardScrollAnimationDuration = 0.28
     static let guideDismissSwipeThreshold: CGFloat = 90
+    static let guideDismissSwipeActivationWidth: CGFloat = 32
     static let errorBannerHorizontalPadding: CGFloat = 16
     static let errorBannerVerticalPadding: CGFloat = 12
     static let errorBannerBottomPadding: CGFloat = 16
@@ -180,6 +181,7 @@ private struct DiscoverDestinationGuideOverlay: View {
             DragGesture(minimumDistance: 24)
                 .onEnded { value in
                     guard
+                        value.startLocation.x <= DiscoverViewLayout.guideDismissSwipeActivationWidth,
                         value.translation.width >= DiscoverViewLayout.guideDismissSwipeThreshold,
                         abs(value.translation.width) > abs(value.translation.height)
                     else {

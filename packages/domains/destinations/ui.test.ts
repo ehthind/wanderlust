@@ -38,6 +38,8 @@ describe("discover feed view", () => {
 
       expect(profile?.details).toHaveLength(4);
       expect(profile?.stories).toHaveLength(8);
+      expect(profile?.mapTour?.stops).toHaveLength(3);
+      expect(profile?.mapTour?.autoplay).toBe(true);
       expect(profile?.destination.id).toBe(destinationId);
     }
   });

@@ -1,11 +1,15 @@
 import { createLogger } from "@wanderlust/shared-logging";
 import type {
+  DestinationMapCameraKeyframe,
+  DestinationMapCoordinate,
+  DestinationMapTourStop,
+  DestinationMapTourView,
   DestinationProfileDetail,
   DestinationProfileStoryCard,
   DestinationSummary,
 } from "@wanderlust/shared-schemas";
 
-import { discoverDestinationIds, featuredDestinationId } from "./config";
+import { destinationMapTours, discoverDestinationIds, featuredDestinationId } from "./config";
 import type { DestinationProfile } from "./types";
 
 const logger = createLogger("destinations.repo", {
@@ -33,36 +37,65 @@ const createStory = (
   imageAccessibilityLabel,
 });
 
+const createMapTourField = (
+  destinationId: string,
+): { mapTour: DestinationMapTourView } | Record<string, never> => {
+  const mapTour = destinationMapTours[destinationId];
+  return mapTour ? { mapTour } : {};
+};
+
+const parisDestination: DestinationSummary = {
+  id: discoverDestinationIds[0],
+  slug: "paris",
+  city: "Paris",
+  country: "France",
+  thesis: "Go for the late-night glow, layered history, and beauty as part of daily life.",
+  bestSeason: "Apr-Oct",
+  budget: "$$$",
+  visa: "Visa-free",
+  idealTripLength: "4-7 days",
+  heroImageUrl:
+    "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1600&q=80",
+  heroImageAccessibilityLabel: "Eiffel Tower and Paris rooftops in the evening light",
+};
+
+const kyotoDestination: DestinationSummary = {
+  id: discoverDestinationIds[1],
+  slug: "kyoto",
+  city: "Kyoto",
+  country: "Japan",
+  thesis:
+    "Go for temple mornings, quiet lanes, and a city that rewards moving slower than your itinerary.",
+  bestSeason: "Mar-May",
+  budget: "$$-$$$",
+  visa: "Visa-free",
+  idealTripLength: "4-6 days",
+  heroImageUrl:
+    "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1600&q=80",
+  heroImageAccessibilityLabel: "Kyoto street with lanterns and traditional wooden buildings",
+};
+
+const mexicoCityDestination: DestinationSummary = {
+  id: discoverDestinationIds[2],
+  slug: "mexico-city",
+  city: "Mexico City",
+  country: "Mexico",
+  thesis:
+    "Go for design energy, serious food, and neighborhoods that make a long weekend feel much larger.",
+  bestSeason: "Oct-Apr",
+  budget: "$$",
+  visa: "Visa-free",
+  idealTripLength: "4-5 days",
+  heroImageUrl:
+    "https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=1600&q=80",
+  heroImageAccessibilityLabel: "Mexico City skyline at golden hour with mountains in the distance",
+};
+
 const discoverDestinationProfiles: DestinationProfile[] = [
   {
-    destination: {
-      id: discoverDestinationIds[0],
-      slug: "paris",
-      city: "Paris",
-      country: "France",
-      thesis: "Go for the late-night glow, layered history, and beauty as part of daily life.",
-      bestSeason: "Apr-Oct",
-      budget: "$$$",
-      visa: "Visa-free",
-      idealTripLength: "4-7 days",
-      heroImageUrl:
-        "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1600&q=80",
-      heroImageAccessibilityLabel: "Eiffel Tower and Paris rooftops in the evening light",
-    },
-    details: createDetails({
-      id: discoverDestinationIds[0],
-      slug: "paris",
-      city: "Paris",
-      country: "France",
-      thesis: "Go for the late-night glow, layered history, and beauty as part of daily life.",
-      bestSeason: "Apr-Oct",
-      budget: "$$$",
-      visa: "Visa-free",
-      idealTripLength: "4-7 days",
-      heroImageUrl:
-        "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1600&q=80",
-      heroImageAccessibilityLabel: "Eiffel Tower and Paris rooftops in the evening light",
-    }),
+    destination: parisDestination,
+    details: createDetails(parisDestination),
+    ...createMapTourField(discoverDestinationIds[0]),
     stories: [
       createStory(
         "paris-story-1",
@@ -123,36 +156,9 @@ const discoverDestinationProfiles: DestinationProfile[] = [
     ],
   },
   {
-    destination: {
-      id: discoverDestinationIds[1],
-      slug: "kyoto",
-      city: "Kyoto",
-      country: "Japan",
-      thesis:
-        "Go for temple mornings, quiet lanes, and a city that rewards moving slower than your itinerary.",
-      bestSeason: "Mar-May",
-      budget: "$$-$$$",
-      visa: "Visa-free",
-      idealTripLength: "4-6 days",
-      heroImageUrl:
-        "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1600&q=80",
-      heroImageAccessibilityLabel: "Kyoto street with lanterns and traditional wooden buildings",
-    },
-    details: createDetails({
-      id: discoverDestinationIds[1],
-      slug: "kyoto",
-      city: "Kyoto",
-      country: "Japan",
-      thesis:
-        "Go for temple mornings, quiet lanes, and a city that rewards moving slower than your itinerary.",
-      bestSeason: "Mar-May",
-      budget: "$$-$$$",
-      visa: "Visa-free",
-      idealTripLength: "4-6 days",
-      heroImageUrl:
-        "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1600&q=80",
-      heroImageAccessibilityLabel: "Kyoto street with lanterns and traditional wooden buildings",
-    }),
+    destination: kyotoDestination,
+    details: createDetails(kyotoDestination),
+    ...createMapTourField(discoverDestinationIds[1]),
     stories: [
       createStory(
         "kyoto-story-1",
@@ -213,38 +219,9 @@ const discoverDestinationProfiles: DestinationProfile[] = [
     ],
   },
   {
-    destination: {
-      id: discoverDestinationIds[2],
-      slug: "mexico-city",
-      city: "Mexico City",
-      country: "Mexico",
-      thesis:
-        "Go for design energy, serious food, and neighborhoods that make a long weekend feel much larger.",
-      bestSeason: "Oct-Apr",
-      budget: "$$",
-      visa: "Visa-free",
-      idealTripLength: "4-5 days",
-      heroImageUrl:
-        "https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=1600&q=80",
-      heroImageAccessibilityLabel:
-        "Mexico City skyline at golden hour with mountains in the distance",
-    },
-    details: createDetails({
-      id: discoverDestinationIds[2],
-      slug: "mexico-city",
-      city: "Mexico City",
-      country: "Mexico",
-      thesis:
-        "Go for design energy, serious food, and neighborhoods that make a long weekend feel much larger.",
-      bestSeason: "Oct-Apr",
-      budget: "$$",
-      visa: "Visa-free",
-      idealTripLength: "4-5 days",
-      heroImageUrl:
-        "https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=1600&q=80",
-      heroImageAccessibilityLabel:
-        "Mexico City skyline at golden hour with mountains in the distance",
-    }),
+    destination: mexicoCityDestination,
+    details: createDetails(mexicoCityDestination),
+    ...createMapTourField(discoverDestinationIds[2]),
     stories: [
       createStory(
         "mexico-city-story-1",
@@ -316,10 +293,38 @@ const cloneDetails = (details: DestinationProfileDetail[]): DestinationProfileDe
 const cloneStories = (stories: DestinationProfileStoryCard[]): DestinationProfileStoryCard[] =>
   stories.map((story) => ({ ...story }));
 
+const cloneCoordinate = (coordinate: DestinationMapCoordinate): DestinationMapCoordinate => ({
+  ...coordinate,
+});
+
+const cloneKeyframes = (
+  keyframes: DestinationMapCameraKeyframe[],
+): DestinationMapCameraKeyframe[] =>
+  keyframes.map((keyframe) => ({
+    ...keyframe,
+    centerCoordinate: cloneCoordinate(keyframe.centerCoordinate),
+  }));
+
+const cloneStops = (stops: DestinationMapTourStop[]): DestinationMapTourStop[] =>
+  stops.map(({ lookAroundCoordinate, ...stop }) => ({
+    ...stop,
+    coordinate: cloneCoordinate(stop.coordinate),
+    ...(lookAroundCoordinate
+      ? { lookAroundCoordinate: cloneCoordinate(lookAroundCoordinate) }
+      : {}),
+    keyframes: cloneKeyframes(stop.keyframes),
+  }));
+
+const cloneMapTour = (tour: DestinationMapTourView): DestinationMapTourView => ({
+  ...tour,
+  stops: cloneStops(tour.stops),
+});
+
 const cloneDestinationProfile = (profile: DestinationProfile): DestinationProfile => ({
   destination: cloneDestinationSummary(profile.destination),
   details: cloneDetails(profile.details),
   stories: cloneStories(profile.stories),
+  ...(profile.mapTour ? { mapTour: cloneMapTour(profile.mapTour) } : {}),
 });
 
 export const listDiscoverDestinations = (): DestinationSummary[] => {

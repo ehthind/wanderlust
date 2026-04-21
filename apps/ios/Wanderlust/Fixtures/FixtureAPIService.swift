@@ -131,7 +131,8 @@ final class FixtureAPIService: WanderlustAPI {
                         imageUrl: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1200&q=80",
                         imageAccessibilityLabel: "Paris skyline with the Eiffel Tower in the distance"
                     )
-                ]
+                ],
+                mapTour: mapTour(for: paris.id)
             ),
             kyoto.id: DestinationProfileView(
                 destination: kyoto,
@@ -193,7 +194,8 @@ final class FixtureAPIService: WanderlustAPI {
                         imageUrl: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80",
                         imageAccessibilityLabel: "Traditional Kyoto street with lanterns and evening light"
                     )
-                ]
+                ],
+                mapTour: mapTour(for: kyoto.id)
             ),
             mexicoCity.id: DestinationProfileView(
                 destination: mexicoCity,
@@ -255,7 +257,8 @@ final class FixtureAPIService: WanderlustAPI {
                         imageUrl: "https://images.unsplash.com/photo-1512813195386-6cf811ad3542?auto=format&fit=crop&w=1200&q=80",
                         imageAccessibilityLabel: "Mexico City skyline with mountains in the distance"
                     )
-                ]
+                ],
+                mapTour: mapTour(for: mexicoCity.id)
             )
         ]
     }()
@@ -437,6 +440,10 @@ final class FixtureAPIService: WanderlustAPI {
         processInfo.environment["WANDERLUST_FAIL_PROFILE_DESTINATION_ID"]
     }
 
+    private var disabledMapTourDestinationId: String? {
+        processInfo.environment["WANDERLUST_DISABLE_MAP_TOUR_DESTINATION_ID"]
+    }
+
     private func planSummary(for destinationId: String) -> String {
         switch destinationId {
         case "dest_kyoto":
@@ -471,6 +478,14 @@ final class FixtureAPIService: WanderlustAPI {
             imageUrl: imageUrl,
             imageAccessibilityLabel: imageAccessibilityLabel
         )
+    }
+
+    private func mapTour(for destinationId: String) -> DestinationMapTourView? {
+        guard disabledMapTourDestinationId != destinationId else {
+            return nil
+        }
+
+        return destinationMapTourFixture(for: destinationId)
     }
 
     private func fixtureOffers(for destinationId: String) -> [LodgingOfferSummary] {

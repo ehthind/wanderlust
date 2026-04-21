@@ -170,6 +170,59 @@ final class WanderlustUITests: XCTestCase {
         XCTAssertTrue(app.buttons["discover.detail.retryButton.dest_kyoto"].waitForExistence(timeout: 5))
     }
 
+    func testDiscoverDestinationGuideShowsMapTourControlsAndSupportsManualPlayback() {
+        let app = launchApp(
+            disableMapTourAutoplay: true,
+            mapTourDurationScale: 0.5
+        )
+
+        openGuide(destinationId: "dest_paris", in: app)
+
+        XCTAssertTrue(app.otherElements["discover.detail.mapTour.map.dest_paris"].waitForExistence(timeout: 5))
+        let coreStopButton = app.buttons["discover.detail.mapTour.stop.paris-core-1st-4th"]
+        let leftBankStopButton = app.buttons["discover.detail.mapTour.stop.paris-left-bank-6th-7th"]
+        let montmartreStopButton = app.buttons["discover.detail.mapTour.stop.paris-montmartre-18th"]
+        let stateProbe = app.staticTexts["discover.detail.mapTour.state.dest_paris"]
+        XCTAssertTrue(coreStopButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(leftBankStopButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(montmartreStopButton.waitForExistence(timeout: 5))
+
+        let playButton = app.buttons["discover.detail.mapTour.playButton.dest_paris"]
+        let replayButton = app.buttons["discover.detail.mapTour.replayButton.dest_paris"]
+        XCTAssertTrue(playButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(replayButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(stateProbe.waitForExistence(timeout: 5))
+        XCTAssertTrue(waitForLabel("paris-core-1st-4th|paused", on: stateProbe))
+        scrollUntilHittable(leftBankStopButton, in: app)
+        scrollUntilHittable(playButton, in: app)
+        scrollUntilHittable(replayButton, in: app)
+
+        tap(leftBankStopButton)
+        XCTAssertTrue(waitForLabel("paris-left-bank-6th-7th|playing", on: stateProbe))
+
+        tap(playButton)
+        XCTAssertTrue(waitForLabel("paris-left-bank-6th-7th|paused", on: stateProbe))
+
+        tap(playButton)
+        XCTAssertTrue(waitForLabel("paris-left-bank-6th-7th|playing", on: stateProbe))
+
+        tap(replayButton)
+        XCTAssertTrue(waitForLabel("paris-core-1st-4th|playing", on: stateProbe))
+    }
+
+    func testDiscoverDestinationGuideKeepsEditorialContentWhenMapTourIsMissing() {
+        let app = launchApp(disabledMapTourDestinationId: "dest_paris")
+
+        openGuide(destinationId: "dest_paris", in: app)
+
+        XCTAssertFalse(app.otherElements["discover.detail.mapTour.map.dest_paris"].exists)
+
+        let bestSeasonValue = app.otherElements["discover.detail.value.best_season"]
+        scrollToElement(bestSeasonValue, in: app, direction: .up)
+        XCTAssertTrue(bestSeasonValue.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["discover.detail.planButton.dest_paris"].waitForExistence(timeout: 5))
+    }
+
     func testDiscoverFeedFloatingActionsSupportSaveAndPlanning() {
         let app = launchApp()
 
@@ -238,7 +291,10 @@ final class WanderlustUITests: XCTestCase {
     private func launchApp(
         dynamicTypeSize: String? = nil,
         profileDelayMs: Int? = nil,
-        failedProfileDestinationId: String? = nil
+        failedProfileDestinationId: String? = nil,
+        disableMapTourAutoplay: Bool = false,
+        mapTourDurationScale: Double? = nil,
+        disabledMapTourDestinationId: String? = nil
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["WANDERLUST_USE_FIXTURES"] = "1"
@@ -254,6 +310,18 @@ final class WanderlustUITests: XCTestCase {
 
         if let failedProfileDestinationId {
             app.launchEnvironment["WANDERLUST_FAIL_PROFILE_DESTINATION_ID"] = failedProfileDestinationId
+        }
+
+        if disableMapTourAutoplay {
+            app.launchEnvironment["WANDERLUST_DISABLE_MAP_TOUR_AUTOPLAY"] = "1"
+        }
+
+        if let mapTourDurationScale {
+            app.launchEnvironment["WANDERLUST_MAP_TOUR_DURATION_SCALE"] = String(mapTourDurationScale)
+        }
+
+        if let disabledMapTourDestinationId {
+            app.launchEnvironment["WANDERLUST_DISABLE_MAP_TOUR_DESTINATION_ID"] = disabledMapTourDestinationId
         }
 
         app.launch()
@@ -272,7 +340,7 @@ final class WanderlustUITests: XCTestCase {
     }
 
     private func swipeRightToCloseGuide(in app: XCUIApplication) {
-        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.18, dy: 0.55))
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.04, dy: 0.55))
         let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.84, dy: 0.55))
         start.press(forDuration: 0.01, thenDragTo: end)
     }
@@ -328,6 +396,14 @@ final class WanderlustUITests: XCTestCase {
             case .down:
                 app.swipeDown()
             }
+        }
+    }
+
+    private func scrollUntilHittable(_ element: XCUIElement, in app: XCUIApplication, attempts: Int = 4) {
+        guard element.exists else { return }
+
+        for _ in 0 ..< attempts where !element.isHittable {
+            app.swipeUp()
         }
     }
 }

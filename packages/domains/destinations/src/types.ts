@@ -1,4 +1,5 @@
 import type {
+  DestinationMapTourView,
   DestinationProfileDetail,
   DestinationProfileStoryCard,
   DestinationSummary,
@@ -8,4 +9,5 @@ export type DestinationProfile = {
   destination: DestinationSummary;
   details: DestinationProfileDetail[];
   stories: DestinationProfileStoryCard[];
+  mapTour?: DestinationMapTourView;
 };

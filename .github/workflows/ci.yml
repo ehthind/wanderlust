@@ -15,6 +15,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  semantic-pr-title:
+    name: semantic-pr-title
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            docs
+            test
+            chore
+            ci
+            build
+            revert
+
   delivery-gate:
     name: delivery-gate
     runs-on: ubuntu-latest
@@ -69,3 +92,44 @@ jobs:
           path: .ci-artifacts/observability-contract.*
           include-hidden-files: true
           if-no-files-found: error
+
+  semantic-release:
+    name: semantic-release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - delivery-gate
+      - observability-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: corepack enable
+      - run: corepack pnpm install --frozen-lockfile
+      - name: Download delivery-gate artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: required-check-delivery-gate
+          path: .release-inputs/required-checks/delivery-gate
+      - name: Download observability-contract artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: required-check-observability-contract
+          path: .release-inputs/required-checks/observability-contract
+      - name: Publish semantic release
+        run: corepack pnpm release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
